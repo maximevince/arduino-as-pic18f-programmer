@@ -1,22 +1,19 @@
 #include <pic18f2550.h>
 
-unsigned int i;
+__code char __at __CONFIG1H CONFIG1H = _OSC_INTOSC__INTOSC_CLK0_RA6___USB_EC_1H;
 
-void main (void)
-{
-	TRISA = 0;
-	TRISB = 0;
-	TRISC = 0;
-
-  while (1)
-	{
-		LATA = 255;
-		LATB = 255;
-		LATC = 255;
-		for(i=0;i<16000;i++);
-		LATA = 0;
-		LATB = 0;
-		LATC = 0;
-		for(i=0;i<16000;i++);
-  }
+int main(void) 
+{ 
+    int i;
+    TRISA = 0x00;
+    TRISB = 0x00;
+    TRISC = 0x00;
+    while(1) 
+    { 
+      LATA ^= 0xFF;
+      LATB ^= 0xFF;
+      LATC ^= 0xFF;  
+      for(i=0; i < 100000; i++); 
+    }
+    return 0;
 }

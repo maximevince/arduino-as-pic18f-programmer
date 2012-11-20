@@ -39,4 +39,4 @@ Thats it!
 
 TODO:
 
-Writing fuses.
+Support for all PIC18F.

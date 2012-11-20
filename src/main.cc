@@ -97,7 +97,7 @@ int pseudoMain(char *file){
 	usleep(DEVICE_DELAY);
 
 	
-/*
+
 	printf("Programming fuse bits...");
 
 
@@ -105,12 +105,12 @@ int pseudoMain(char *file){
 		if(fuseChanged(thehex,i)){
 			sprintf(buf,"C%X%02XX",i,getfuse(thehex,i));
 			SendBuf(comPort,(unsigned char *)buf,strlen(buf));
-			sleep(DEVICE_DELAY);
+			usleep(DEVICE_DELAY);
 		}
 	}
 	
 	printf("Success!\n");
-	*/
+
 
 
 
