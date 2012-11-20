@@ -1,4 +1,9 @@
+Version 0.1
+
+
 Copyright (C) 2012  kirill Kulakov - https://sites.google.com/site/thehighspark/home
+
+Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/arduino-as-pic18f-programmer-for-linux
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,21 +18,25 @@ Copyright (C) 2012  kirill Kulakov - https://sites.google.com/site/thehighspark/
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
------------------------------------------------
 
 thanks to Teunis van Beelen for the 'rs232' lib, you could find him over him website teuniz.net
 
------------------------------------------------
 
-Version 0.2
+This linux version uses the implementation of Borland's conio.h by Piotr Helka (piotr.helka@nd.e-wro.pl) made arround ncurses library, so you have to install it first. Try "sudo apt-get install libncurses5*" in debian distributions.
+
+----------------------------------------------------------------
 
 HOW TO:
 
-1. upload the sketch to the arduino
-2. connect the chip (pic18f2550) to the arduino
-3. run Arduino_Pic18F2550_programmer.exe
-4. write the location of the .hex file (you can use the blink example)
+1. Compile with make (deps: ncurses)
+2. Upload the sketch to the arduino
+3. Connect the chip (pic18f2550) to the arduino
+4. Run ./pic_programmer HEX_FILE
 
-thats it!
+Thats it!
 
+----------------------------------------------------------------
 
+TODO:
+
+Writing fuses.

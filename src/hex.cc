@@ -16,7 +16,7 @@ Copyright (C) 2012  kirill Kulakov
 
 */
 
-#include "HEX.h"
+#include "hex.h"
 #include <stdio.h>
 #include <stdlib.h>
 

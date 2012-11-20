@@ -15,34 +15,22 @@ Copyright (C) 2012  kirill Kulakov
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+#include <stdio.h>
 
 #include "rs232.h"
-#include "HEX.h"
+#include "hex.h"
 
-#include <stdio.h>
+
 #include <stdlib.h>
-#include <conio.h>
 
-#define DEVICE_DELAY 150
+#include <iostream>
 
-void main(){
+using namespace std;
 
-	printf("Arduino as A PIC18f2550 programmer - Version 0.2 - http://goo.gl/fyd9mn\n");
-
-	if(_main()){
-		printf("Error! can not continue\n");
-		printf("Make sure you have uploaded the sketch to the Arduino,\nconnected the chip correctly and using a valid HEX file\n");
-	}
-	else {
-		printf("The chip was programmed successfully!\n");
-		
-	}
-	
-	system("pause");
-}
+#define DEVICE_DELAY 200000
 
 
-int _main(){
+int pseudoMain(char *file){
 
 	HEX thehex;
 	char buf[4096],key;
@@ -51,9 +39,10 @@ int _main(){
 	int comPort=-1;
 
 	//reading the hex file
-	printf("Enter location of hex file: ");
-	scanf("%4096[^\n]",buf);
-	if( (thehex = readHex(buf)) == NULL ){
+	//printf("Enter location of hex file: ");
+	//scanf("%4096[^\n]",buf);
+
+	if( (thehex = readHex(file)) == NULL ){
 		printf("Can not open the file\n");
 		return 1;
 	}
@@ -64,18 +53,18 @@ int _main(){
 	for(i=0;i<16;i++){
 		if(!OpenComport(i, 9600)){
 			for(j=0;j<10;j++){
-				SendBuf(2,(unsigned char *)"DX",strlen("DX"));
-				n = PollComport(2, (unsigned char *)buf, 4095);
-				Sleep(DEVICE_DELAY);
+				SendBuf(i,(unsigned char *)"DX",strlen("DX"));
+				n = PollComport(i, (unsigned char *)buf, 4095);
+				usleep(DEVICE_DELAY);
 				if( *buf == 'T' || *buf == 'F' ){
 					comPort = i;
 					break;
 				}
 				
 			}
-			CloseComport(2);
+			CloseComport(i);
 			if( comPort != -1 )
-				break;		
+				break;
 		}
 	}
 
@@ -93,7 +82,7 @@ int _main(){
 	do{
 	if( SendBuf(comPort,(unsigned char *)"DX",strlen("DX")) == -1 ) return 1;
 	n = PollComport(comPort, (unsigned char *)buf, 4095);
-	Sleep(DEVICE_DELAY);
+	usleep(DEVICE_DELAY);
 	}while( n == 0 || *buf != 'T' );
 	
 	printf("Success!\n");
@@ -105,10 +94,10 @@ int _main(){
 
 	printf("Success!\n");
 
-	Sleep(DEVICE_DELAY);
+	usleep(DEVICE_DELAY);
 
 	
-
+/*
 	printf("Programming fuse bits...");
 
 
@@ -116,12 +105,15 @@ int _main(){
 		if(fuseChanged(thehex,i)){
 			sprintf(buf,"C%X%02XX",i,getfuse(thehex,i));
 			SendBuf(comPort,(unsigned char *)buf,strlen(buf));
-			Sleep(DEVICE_DELAY);
+			sleep(DEVICE_DELAY);
 		}
 	}
 	
 	printf("Success!\n");
-	
+	*/
+
+
+
 	printf("Programming flash memory...");
 
 	//memory write
@@ -136,17 +128,18 @@ int _main(){
 					sprintf(buf+strlen(buf),"%02X",getData(thehex,address+i));
 				sprintf(buf+strlen(buf),"X\n");
 				SendBuf(comPort,(unsigned char *)buf,strlen(buf));
-				Sleep(DEVICE_DELAY);
+				usleep(DEVICE_DELAY);
 				break;
 			}
 		}
 
 		address += 0x20;
-
 	}
 
 	printf("Success!\n");
-  
+
+
+
 	CloseComport(2);
 
 	printf("---------------------------\n");
@@ -154,3 +147,24 @@ int _main(){
 	return 0;
 
 }
+
+int main(int argc, char *argv[]){
+	printf("Arduino as A PIC18f2550 programmer\n");
+
+	if(pseudoMain(argv[1])){
+		printf("Error! can not continue\n");
+		printf("Make sure you have uploaded the sketch to the Arduino,\nconnected the chip correctly and using a valid HEX file\n");
+	}
+	else {
+		printf("The chip was programmed successfully!\n");
+		
+	}
+/*
+	printf("Press 'Enter' to continue: ... ");
+	while ( getchar() != '\n')
+		;*/
+	return 0;
+}
+
+
+
