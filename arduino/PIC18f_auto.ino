@@ -36,7 +36,8 @@ void loop(){
   //turn on the chip (disable programming mode & diable reset)
   digitalWrite(PGM,LOW);
   digitalWrite(MCLR,HIGH);
-  
+  if (Serial.available())
+	mainFunction();
 } 
 
 
@@ -44,7 +45,7 @@ void loop(){
 //////THE MAIN CODE///////////
 //////////////////////////////
 //////////////////////////////
-void serialEvent() {
+void mainFunction() {
    
   while (Serial.available()) {
 
