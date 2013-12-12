@@ -1,5 +1,4 @@
-Version 0.1
-
+﻿Version 0.2
 
 Copyright (C) 2012  kirill Kulakov - https://sites.google.com/site/thehighspark/home
 
@@ -18,25 +17,30 @@ Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/ardui
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-thanks to Teunis van Beelen for the 'rs232' lib, you could find him over him website teuniz.net
-
-
-This linux version uses the implementation of Borland's conio.h by Piotr Helka (piotr.helka@nd.e-wro.pl) made arround ncurses library, so you have to install it first. Try "sudo apt-get install libncurses5*" in debian distributions.
-
 ----------------------------------------------------------------
 
 HOW TO:
 
-1. Compile with make (deps: ncurses)
-2. Upload the sketch to the arduino
-3. Connect the chip (pic18f2550) to the arduino
-4. Run ./pic_programmer HEX_FILE
+1. Upload the sketch to the arduino
+2. Connect the chip to the arduino
+3. Run ./pic_programmer.py -i HEX_FILE
+
+* For help run ./pic_programmer.py -h
 
 Thats it!
 
 ----------------------------------------------------------------
 
-TODO:
+RELEASE:
 
-Support for all PIC18F.
+version 0.2 - has a new PC-side software written in Python. It's simpler than the older and a bit faster, it uses the pySerial library and allows to pragram the following microcontrollers:
+	18F2420
+	18F2455
+	18F2520
+	18F2550
+	18F4420
+	18F4455
+	18F4520
+	18F4550
+
+Only the 18F2550 and 18F4550 have been tested.

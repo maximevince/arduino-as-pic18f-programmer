@@ -122,7 +122,7 @@ void mainFunction() {
     digitalWrite(PGM,LOW);
     digitalWrite(MCLR,LOW);
      
-     //Serial.println("Erase complety");
+     Serial.print("K");
      
      nullString();
     }
@@ -173,6 +173,12 @@ void mainFunction() {
      
     }
     
+        // Say hello
+    if (stringComplete && inputString.charAt(0) == 'H'){
+      delay (1);
+      Serial.print("H");
+      nullString();
+    }
     
     if (stringComplete && inputString.charAt(0) == 'C'){ //config
     
@@ -189,24 +195,40 @@ void mainFunction() {
     }
     
     if (stringComplete && inputString.charAt(0) == 'D'){ //config
+      delay(100);
+      digitalWrite(PGM,HIGH);
+      digitalWrite(MCLR,HIGH);
+      delay(1);
+      
+      uint8_t devID1 = readFlash(0x3f,0xff,0xfe) & 0b11100000;
+      uint8_t devID2 = readFlash(0x3f,0xff,0xff);
+      Serial.write (devID1);
+      Serial.write (devID2);
+      /*if( checkIf_pic18f2550() )
+        Serial.print("T");
+       else 
+        Serial.print("F");
+      */
+      
+      
+      digitalWrite(PGM,LOW);
+      digitalWrite(MCLR,LOW);
+      nullString();
     
-    if( checkIf_pic18f2550() ){
-      delay(100); Serial.print("T");
-    } else {
-      delay(100); Serial.print("F");
     }
     
+
     
-    digitalWrite(PGM,LOW);
-    digitalWrite(MCLR,LOW);
-    nullString();
-    
-    }
-    
-    //clear string incase the first CHAR isn't E,R,W
-    if(inputString.charAt(0) != 'E' && inputString.charAt(0) != 'R' && inputString.charAt(0) != 'W' && inputString.charAt(0) != 'C' && inputString.charAt(0) != 'D') nullString();
+    //clear string incase the first CHAR isn't known
+    if(inputString.charAt(0) != 'H' && 
+      inputString.charAt(0) != 'E' && 
+      inputString.charAt(0) != 'R' && 
+      inputString.charAt(0) != 'W' && 
+      inputString.charAt(0) != 'C' && 
+      inputString.charAt(0) != 'D') 
+        nullString();
   
-}
+    }
 
 
 
@@ -498,16 +520,21 @@ switch(msb){
   
 }
 
-int checkIf_pic18f2550(){
+uint16_t checkPIC(){
   
   digitalWrite(PGM,HIGH);
   digitalWrite(MCLR,HIGH);
   delay(1);
   
+  uint8_t devid1 = readFlash(0x3f,0xff,0xfe);
+  uint8_t devid2 = readFlash(0x3f,0xff,0xff);
+  return ((devid2 << 8) || devid1);
+  /*
   if( readFlash(0x3f,0xff,0xff) == 0x12 )
     return 1;
   else
-    return 0;
+    return 0;*/
+   
 }
 
 
