@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-Copyright (C) 2012  kirill Kulakov & Jose Carlos Granja
+Copyright (C) 2012-2017 Kirill Kulakov, Jose Carlos Granja & Xerxes Ranby
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ import sys
 class Hex:
     def __init__(self, fileName):
         self.memory = [0] * 0x8000
+        self.eeprom = [0] * 0x100
+        self.id = [0] * 0x8
 
         self.offset = 0
         self.fuseValue = [0] * 0xF
@@ -34,6 +36,10 @@ class Hex:
 
         for i in range(0x8000):
             self.memory[i] = 0xFF
+        for i in range(0x100):
+            self.eeprom[i] = 0
+        for i in range(0x8):
+            self.id[i] = 0
         for i in range(0x0F):
             self.fuseStatus[i] = 0
 
@@ -49,6 +55,12 @@ class Hex:
     def getData(self, address):
         return self.memory[address]
 
+    def getEEPROM(self, address):
+        return self.eeprom[address]
+
+    def getID(self, address):
+        return self.id[address]
+
     def fuseChanged(self, fuseID):
         return self.fuseStatus[fuseID]
 
@@ -58,6 +70,12 @@ class Hex:
     # HEX parser
     def reformat(self, hexData):
         buf = hexData
+
+        # comment
+        if hexData.startswith(";"):
+            print hexData
+            return 0
+
         iSize, buf = int(buf[:2], 16), buf[2:]
         if iSize == -1:
             return 1
@@ -97,9 +115,11 @@ class Hex:
 
         elif iRecord == 0:
 
-            if (iAddress + self.offset) < 0x8000 or (iAddress + self.offset) >= 0xF00000:
+            # Memory
+            if (iAddress + self.offset) < 0x8000:
                 for i in range(iSize / 2):
                     buf = buf[2:]
+
                     self.memory[iAddress + i * 2 + self.offset] = int(buf[:2], 16)
                     if self.memory[iAddress + i * 2 + self.offset] == -1:
                         return 1
@@ -109,16 +129,39 @@ class Hex:
                     if self.memory[iAddress + i * 2 + self.offset + 1] == -1:
                         return 1
 
+            # Id
+            elif iAddress + self.offset >= 0x200000 and iAddress + self.offset <= 0x200007:
+                for i in range(iSize):
+                    buf = buf[2:]
+                    self.id[iAddress + self.offset + i - 0x200000] = int(buf[:2], 16)
+                    if int(buf[:2], 16) == -1:
+                        return 1
+
+            # Fuse values
             elif iAddress + self.offset >= 0x300000 and iAddress + self.offset <= 0x30000F:
                 for i in range(iSize):
                     buf = buf[2:]
                     self.fuseValue[iAddress + self.offset + i - 0x300000] = int(buf[:2], 16)
                     if int(buf[:2], 16) == -1:
-                        return 1;
+                        return 1
 
                     self.fuseStatus[iAddress + self.offset + i - 0x300000] = 1
 
-            else:
-                return 1
+            # EEPROM
+            elif (iAddress + self.offset) >= 0xF00000 and iAddress + self.offset <= 0xF000FF:
+                for i in range(iSize / 2):
+                    buf = buf[2:]
+                    self.eeprom[iAddress + i * 2 + self.offset - 0xF00000] = int(buf[:2], 16)
+                    if self.eeprom[iAddress + i * 2 + self.offset - 0xF00000] == -1:
+                        return 1
 
+                    buf = buf[2:]
+                    self.eeprom[iAddress + i * 2 + self.offset - 0xF00000 + 1] = int(buf[:2], 16)
+                    if self.eeprom[iAddress + i * 2 + self.offset - 0xF00000 + 1] == -1:
+                        return 1
+
+            # Unknown data
+            else:
+                print hex(iAddress + self.offset)
+                return 1
         return 0

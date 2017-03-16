@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-Copyright (C) 2012  kirill Kulakov & Jose Carlos Granja
+Copyright (C) 2012-2017  Kirill Kulakov, Jose Carlos Granja & Xerxes Ranby
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -91,7 +91,6 @@ def main():
         arduino.write('DX' + '\r\n')  # asking Arduino for the DeviceID
         time.sleep(SLEEP_TIME)
         deviceID = ord(arduino.read()) + ord(arduino.read()) * 256
-
         # checking the MCU
         mcu_found = False
         for mcu, ID in mcus:
@@ -117,8 +116,9 @@ def main():
                             arduino.write(buf.upper())
                             time.sleep(SLEEP_TIME)
                     print "\tSuccess"
-                    print "Programming flash memory...",
 
+                    print "Programming flash memory...",
+                    # program
                     address = 0
                     while address < 0x8000:
                         for i in range(0x20):
@@ -133,6 +133,35 @@ def main():
                                 break
                         address += 0x20
 
+                    # EEPROM 0xF00000 - 0xF00100
+                    address = 0
+                    while address < 0x100:
+                        for i in range(0x20):
+                            if hexFile.getEEPROM(address + i) != 0xFF:
+                                buf = "W"
+                                buf += str(hex(address + 0xF00000)[2:].zfill(4))
+                                for j in range(0x20):
+                                    buf += str(hex(hexFile.getEEPROM(address + j))[2:].zfill(2))
+                                buf += "X"
+                                arduino.write(buf.upper())
+                                time.sleep(SLEEP_TIME)
+                                break
+                        address += 0x20
+
+                    # ID 0x200000 - 0x200007
+                    address = 0
+                    while address < 0x100:
+                        for i in range(0x20):
+                            if hexFile.getID(address + i) != 0xFF:
+                                buf = "W"
+                                buf += str(hex(address + 0x200000)[2:].zfill(4))
+                                for j in range(0x20):
+                                    buf += str(hex(hexFile.getID(address + j))[2:].zfill(2))
+                                buf += "X"
+                                arduino.write(buf.upper())
+                                time.sleep(SLEEP_TIME)
+                                break
+                        address += 0x20
                     print "\tSuccess"
             else:
                 print "Couldn't erase the chip."

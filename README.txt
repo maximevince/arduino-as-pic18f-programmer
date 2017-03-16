@@ -33,6 +33,8 @@ Thats it!
 
 RELEASE:
 
+version 0.3 - Support loading EEPROM, Id and comment sections from HEX file.
+
 version 0.2 - has a new PC-side software written in Python. It's simpler than the old one and a bit faster, it uses the pySerial library and allows to program the following microcontrollers:
 	18F2420
 	18F2455
