@@ -33,7 +33,10 @@ Thats it!
 
 RELEASE:
 
-version 0.3 - Support loading EEPROM, Id and comment sections from HEX file.
+version 0.3
+ - Support loading EEPROM, Id and comment sections from HEX file.
+ - Programming is now up to 4 times faster
+   Arduino UNO now operate at 38400 baud instead of 9600 baud
 
 version 0.2 - has a new PC-side software written in Python. It's simpler than the old one and a bit faster, it uses the pySerial library and allows to program the following microcontrollers:
 	18F2420

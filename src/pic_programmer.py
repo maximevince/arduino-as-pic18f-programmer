@@ -74,7 +74,7 @@ def main():
 
     # Open Serial port
     try:
-        arduino = Serial(PORT, 9600)
+        arduino = Serial(PORT, 38400)
     except SerialException, msg:
         print msg
         sys.exit(2)
