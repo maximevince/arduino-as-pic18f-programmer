@@ -132,7 +132,9 @@ def main():
                                 time.sleep(SLEEP_TIME)
                                 break
                         address += 0x20
+                    print "\tSuccess"
 
+                    print "Programming EEPROM...",
                     # EEPROM 0xF00000 - 0xF00100
                     address = 0
                     while address < 0x100:
@@ -148,20 +150,23 @@ def main():
                                 break
                         address += 0x20
 
+                    print "\tSucess"
+
+                    print "Programming ID memory...",
                     # ID 0x200000 - 0x200007
                     address = 0
-                    while address < 0x100:
-                        for i in range(0x20):
+                    while address < 0x8:
+                        for i in range(0x8):
                             if hexFile.getID(address + i) != 0xFF:
                                 buf = "W"
                                 buf += str(hex(address + 0x200000)[2:].zfill(4))
-                                for j in range(0x20):
+                                for j in range(0x8):
                                     buf += str(hex(hexFile.getID(address + j))[2:].zfill(2))
                                 buf += "X"
                                 arduino.write(buf.upper())
                                 time.sleep(SLEEP_TIME)
                                 break
-                        address += 0x20
+                        address += 0x8
                     print "\tSuccess"
             else:
                 print "Couldn't erase the chip."

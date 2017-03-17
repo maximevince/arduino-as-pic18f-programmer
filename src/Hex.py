@@ -37,9 +37,9 @@ class Hex:
         for i in range(0x8000):
             self.memory[i] = 0xFF
         for i in range(0x100):
-            self.eeprom[i] = 0
+            self.eeprom[i] = 0xFF
         for i in range(0x8):
-            self.id[i] = 0
+            self.id[i] = 0xFF
         for i in range(0x0F):
             self.fuseStatus[i] = 0
 
