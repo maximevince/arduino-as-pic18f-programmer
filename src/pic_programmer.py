@@ -88,17 +88,26 @@ def main():
         print ("\tSuccess")
         print ("Connecting to the mcu..."),
         arduino.flushInput()
-        arduino.write('DX' + '\r\n')  # asking Arduino for the DeviceID
-        time.sleep(SLEEP_TIME)
-        deviceID = ord(arduino.read()) + ord(arduino.read()) * 256
+
         # checking the MCU
         mcu_found = False
-        for mcu, ID in mcus:
-            if ID == deviceID:
-                print "\tYour MCU: " + mcu
-                mcu_found = True
+
+        # do not probe for MCU if specified on commandline
+        if MCU != "":
+            mcu_found = True
+
+        if not mcu_found:
+            arduino.write('DX' + '\r\n')  # asking Arduino for the DeviceID
+            time.sleep(SLEEP_TIME)
+            deviceID = ord(arduino.read()) + ord(arduino.read()) * 256
+
+            for mcu, ID in mcus:
+                if ID == deviceID:
+                    print "\tYour MCU: " + mcu
+                    mcu_found = True
 
         if mcu_found:
+            # Perform Bulk Erase
             print "Erasing chip............",
             arduino.flushInput()
             arduino.write('EX' + '\r\n')
@@ -109,16 +118,8 @@ def main():
                     # open and parse the hex file
                     hexFile = Hex(FILENAME)
 
-                    print "Programming the fuse bits...",
-                    for i in range(0x0F):
-                        if hexFile.fuseChanged(i):
-                            buf = "C" + hex(i)[2:] + hex(hexFile.getFuse(i))[2:] + "X"
-                            arduino.write(buf.upper())
-                            time.sleep(SLEEP_TIME)
-                    print "\tSuccess"
-
+                    # Program Memory
                     print "Programming flash memory...",
-                    # program
                     address = 0
                     while address < 0x8000:
                         for i in range(0x20):
@@ -134,24 +135,7 @@ def main():
                         address += 0x20
                     print "\tSuccess"
 
-                    print "Programming EEPROM...",
-                    # EEPROM 0xF00000 - 0xF00100
-                    address = 0
-                    while address < 0x100:
-                        for i in range(0x20):
-                            if hexFile.getEEPROM(address + i) != 0xFF:
-                                buf = "W"
-                                buf += str(hex(address + 0xF00000)[2:].zfill(4))
-                                for j in range(0x20):
-                                    buf += str(hex(hexFile.getEEPROM(address + j))[2:].zfill(2))
-                                buf += "X"
-                                arduino.write(buf.upper())
-                                time.sleep(SLEEP_TIME)
-                                break
-                        address += 0x20
-
-                    print "\tSucess"
-
+                    # Program IDs
                     print "Programming ID memory...",
                     # ID 0x200000 - 0x200007
                     address = 0
@@ -168,6 +152,48 @@ def main():
                                 break
                         address += 0x8
                     print "\tSuccess"
+
+                    # Program Data EE
+                    # TODO only some parts have EEPROM
+                    print "Programming EEPROM......",
+                    # EEPROM 0xF00000 - 0xF00100
+                    address = 0
+                    while address < 0x100:
+                        for i in range(0x20):
+                            if hexFile.getEEPROM(address + i) != 0xFF:
+                                buf = "W"
+                                buf += str(hex(address + 0xF00000)[2:].zfill(4))
+                                for j in range(0x20):
+                                    buf += str(hex(hexFile.getEEPROM(address + j))[2:].zfill(2))
+                                buf += "X"
+                                arduino.write(buf.upper())
+                                time.sleep(SLEEP_TIME)
+                                break
+                        address += 0x20
+
+                    print "\tSuccess"
+
+                    # verify Program
+                    # TODO
+
+                    # verify IDs
+                    # TODO
+
+                    # verify Data
+                    # TODO
+
+                    # program configuration bits
+                    print "Programming the fuse bits...",
+                    for i in range(0x0F):
+                        if hexFile.fuseChanged(i):
+                            buf = "C" + hex(i)[2:] + hex(hexFile.getFuse(i))[2:] + "X"
+                            arduino.write(buf.upper())
+                            time.sleep(SLEEP_TIME)
+
+                    print "\tSuccess"
+
+                    # verify configuration bits
+                    # TODO
             else:
                 print "Couldn't erase the chip."
                 sys.exit(1)
