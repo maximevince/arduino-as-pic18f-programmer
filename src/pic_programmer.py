@@ -33,7 +33,7 @@ def getOut():
 
 def main():
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], 'hp:aP:i:le', ['help', 'port=', 'list', 'erase'])
+        options, arguments = getopt.getopt(sys.argv[1:], 'hp:aP:i:le:lv', ['help', 'port=', 'list', 'erase'])
     except getopt.error, msg:
         print msg
         getOut()
@@ -42,6 +42,7 @@ def main():
     PORT = ""
     FILENAME = ""
     ERASE_MODE = False
+    verbose = False
 
     SLEEP_TIME = 0.00001
 
@@ -63,6 +64,8 @@ def main():
             PORT = arg
         elif opt in ('-i'):
             FILENAME = arg
+        elif opt in ('-v'):
+            verbose = True
 
     if PORT == "":
         PORT = '/dev/ttyACM0'
@@ -120,6 +123,8 @@ def main():
 
                     # Program Memory
                     print "Programming flash memory...",
+                    if verbose:
+                        print "\n",
                     address = 0
                     while address < 0x8000:
                         for i in range(0x20):
@@ -129,6 +134,8 @@ def main():
                                 for j in range(0x20):
                                     buf += str(hex(hexFile.getData(address + j))[2:].zfill(2))
                                 buf += "X"
+                                if verbose:
+                                    print buf
                                 arduino.write(buf.upper())
                                 time.sleep(SLEEP_TIME)
                                 break
@@ -137,16 +144,20 @@ def main():
 
                     # Program IDs
                     print "Programming ID memory...",
+                    if verbose:
+                        print "\n",
                     # ID 0x200000 - 0x200007
                     address = 0
                     while address < 0x8:
                         for i in range(0x8):
                             if hexFile.getID(address + i) != 0xFF:
                                 buf = "W"
-                                buf += str(hex(address + 0x200000)[2:].zfill(4))
+                                buf += str(hex(address + 0x200000)[2:].zfill(6))
                                 for j in range(0x8):
                                     buf += str(hex(hexFile.getID(address + j))[2:].zfill(2))
                                 buf += "X"
+                                if verbose:
+                                    print buf
                                 arduino.write(buf.upper())
                                 time.sleep(SLEEP_TIME)
                                 break
@@ -156,16 +167,20 @@ def main():
                     # Program Data EE
                     # TODO only some parts have EEPROM
                     print "Programming EEPROM......",
+                    if verbose:
+                        print "\n",
                     # EEPROM 0xF00000 - 0xF00100
                     address = 0
                     while address < 0x100:
                         for i in range(0x20):
                             if hexFile.getEEPROM(address + i) != 0xFF:
                                 buf = "W"
-                                buf += str(hex(address + 0xF00000)[2:].zfill(4))
+                                buf += str(hex(address + 0xF00000)[2:].zfill(6))
                                 for j in range(0x20):
                                     buf += str(hex(hexFile.getEEPROM(address + j))[2:].zfill(2))
                                 buf += "X"
+                                if verbose:
+                                    print buf
                                 arduino.write(buf.upper())
                                 time.sleep(SLEEP_TIME)
                                 break
@@ -184,9 +199,14 @@ def main():
 
                     # program configuration bits
                     print "Programming the fuse bits...",
+                    if verbose:
+                        print "\n",
                     for i in range(0x0F):
                         if hexFile.fuseChanged(i):
-                            buf = "C" + hex(i)[2:] + hex(hexFile.getFuse(i))[2:] + "X"
+                            buf = "C" + hex(i)[2:] + hex(hexFile.getFuse(i))[2:].zfill(2) + "X"
+                            if verbose:
+                                print "fuse "+str(hex(i))+" changed to "+str(hex(hexFile.getFuse(i)))
+                                print buf
                             arduino.write(buf.upper())
                             time.sleep(SLEEP_TIME)
 
