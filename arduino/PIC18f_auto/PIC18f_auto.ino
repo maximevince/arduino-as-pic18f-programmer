@@ -58,21 +58,40 @@ void mainFunction() {
 
     if (stringComplete && inputString.charAt(0) == 'W') { //WRITE
 
-        if (inputString.length() != 69) {
+        int offset;
+        int data;
+        if (inputString.length() == 69) { // 1+4+32*2
+            // Program
+            address[2] = 0;
+            address[1] = char2byte(inputString.charAt(2), inputString.charAt(1));
+            address[0] = char2byte(inputString.charAt(4), inputString.charAt(3));
+            offset = 5; // WAAAA
+            data = 32;
+        } else if (inputString.length() == 71) { // 1+6+32*2
+            // EEPROM
+            address[2] = char2byte(inputString.charAt(2), inputString.charAt(1));
+            address[1] = char2byte(inputString.charAt(4), inputString.charAt(3));
+            address[0] = char2byte(inputString.charAt(6), inputString.charAt(5));
+            offset = 7; // WAAAAAA
+            data = 32;
+        } else if (inputString.length() == 23) { // 1+6+8*2
+            // ID memory
+            address[2] = char2byte(inputString.charAt(2), inputString.charAt(1));
+            address[1] = char2byte(inputString.charAt(4), inputString.charAt(3));
+            address[0] = char2byte(inputString.charAt(6), inputString.charAt(5));
+            offset = 7; // WAAAAAA
+            data = 8;
+        } else {
             //Serial.println("Input is wrong, should be: W<address - 4 digit><32bytes>X");
             nullString();
             goto endofthisif;
         }
 
-        address[2] = 0;
-        address[1] = char2byte(inputString.charAt(2), inputString.charAt(1));
-        address[0] = char2byte(inputString.charAt(4), inputString.charAt(3));
-
         nullBuffer(); // set everything FF
 
-        for (int i = 0; i < 32; i++) {
-            buffer[i] = char2byte(inputString.charAt(2 * i + 6),
-                    inputString.charAt(2 * i + 5));
+        for (int i = 0; i < data; i++) {
+            buffer[i] = char2byte(inputString.charAt(2 * i + offset + 1),
+                    inputString.charAt(2 * i + offset));
         }
 
         nullString();
