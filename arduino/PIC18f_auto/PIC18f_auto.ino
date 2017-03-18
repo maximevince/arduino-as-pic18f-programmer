@@ -121,7 +121,9 @@ void mainFunction() {
         } else if (address[2] == 0xf0) {
             // EEPROM Data
             for(int i=0;i<data;i++) {
-                eepromWrite(address[1],address[0]+i, buffer[i]);
+                if (buffer[i] != 0x00) { // Speedup, eeprom is erased, only write if bits change
+                    eepromWrite(address[1],address[0]+i, buffer[i]);
+                }
             }
         } else if (address[2] == 0x20) {
             // ID
