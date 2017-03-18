@@ -44,8 +44,6 @@ def main():
     ERASE_MODE = False
     verbose = False
 
-    SLEEP_TIME = 0.00001
-
     for opt, arg in options:
         if opt in ('-h', '--help'):
             helpFile = open("help", "r")
@@ -85,12 +83,12 @@ def main():
     time.sleep(2)
 
     # Say hello to Arduino
+    arduino.flushInput()
     arduino.write('HX' + '\r\n')
     if arduino.read() == 'H':
         # If Arduino responds, check for the mcu
         print ("\tSuccess")
         print ("Connecting to the mcu..."),
-        arduino.flushInput()
 
         # checking the MCU
         mcu_found = False
@@ -100,8 +98,8 @@ def main():
             mcu_found = True
 
         if not mcu_found:
+            arduino.flushInput()
             arduino.write('DX' + '\r\n')  # asking Arduino for the DeviceID
-            time.sleep(SLEEP_TIME)
             deviceID = ord(arduino.read()) + ord(arduino.read()) * 256
 
             for mcu, ID in mcus:
@@ -136,8 +134,9 @@ def main():
                                 buf += "X"
                                 if verbose:
                                     print buf
+                                arduino.flushInput()
                                 arduino.write(buf.upper())
-                                time.sleep(SLEEP_TIME)
+                                arduino.read()
                                 break
                         address += 0x20
                     print "\tSuccess"
@@ -158,8 +157,9 @@ def main():
                                 buf += "X"
                                 if verbose:
                                     print buf
+                                arduino.flushInput()
                                 arduino.write(buf.upper())
-                                time.sleep(SLEEP_TIME)
+                                arduino.read()
                                 break
                         address += 0x8
                     print "\tSuccess"
@@ -181,8 +181,9 @@ def main():
                                 buf += "X"
                                 if verbose:
                                     print buf
+                                arduino.flushInput()
                                 arduino.write(buf.upper())
-                                time.sleep(SLEEP_TIME)
+                                arduino.read()
                                 break
                         address += 0x20
 
@@ -207,8 +208,9 @@ def main():
                             if verbose:
                                 print "fuse "+str(hex(i))+" changed to "+str(hex(hexFile.getFuse(i)))
                                 print buf
+                            arduino.flushInput()
                             arduino.write(buf.upper())
-                            time.sleep(SLEEP_TIME)
+                            arduino.read()
 
                     print "\tSuccess"
 

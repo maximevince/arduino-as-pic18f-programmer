@@ -7,8 +7,10 @@
 #define PGM 8
 #define MCLR 7
 
-#define P15 1
-#define P12 1
+// delay constants from page 42 & 43 of 39622L.pdf
+#define P10us 100
+#define P5us 1
+#define P6us 1
 
 String inputString = "";
 boolean stringComplete = false;
@@ -113,12 +115,22 @@ void mainFunction() {
 
         delay(1);
 
-        programBuffer(address[2], address[1], address[0]);
+        if (address[2] == 0x00) {
+            programBuffer(address[2], address[1], address[0]);
+        } else if (address[2] == 0xf0) {
+            // EEPROM Data
+            for(int i=0;i<data;i++) {
+                eepromWrite(address[1],address[0]+i, buffer[i]);
+            }
+        } else if (address[2] == 0x20) {
+            // ID
+            idBuffer();
+        }
 
         digitalWrite(PGM, LOW);
         digitalWrite(MCLR, LOW);
 
-        //Serial.println("Programming complety");
+        Serial.print("K");
     }
 
     endofthisif: ;
@@ -175,7 +187,7 @@ void mainFunction() {
         digitalWrite(MCLR, LOW);
 
         nullString();
-
+        Serial.print("K");
     }
 
     // Say hello
@@ -197,10 +209,10 @@ void mainFunction() {
         digitalWrite(PGM, LOW);
         digitalWrite(MCLR, LOW);
         nullString();
-
+        Serial.print("K");
     }
 
-    if (stringComplete && inputString.charAt(0) == 'D') { //config
+    if (stringComplete && inputString.charAt(0) == 'D') { //read device
         delay(100);
         digitalWrite(PGM, HIGH);
         digitalWrite(MCLR, HIGH);
@@ -210,16 +222,11 @@ void mainFunction() {
         uint8_t devID2 = readFlash(0x3f, 0xff, 0xff);
         Serial.write(devID1);
         Serial.write(devID2);
-        /*if( checkIf_pic18f2550() )
-         Serial.print("T");
-         else
-         Serial.print("F");
-         */
 
         digitalWrite(PGM, LOW);
         digitalWrite(MCLR, LOW);
         nullString();
-
+        Serial.print("K");
     }
 
     //clear string incase the first CHAR isn't known
@@ -397,6 +404,139 @@ void configWrite(byte address, byte data) {
     delayMicroseconds(100);
 
     send16bit(0x0000);
+}
+
+void eepromWrite(byte addr, byte addrH, byte data) {
+    // Step 1: direct access to data EEPROM
+    send4bitcommand (B0000);
+    send16bit(0x9ea6);
+    send4bitcommand(B0000);
+    send16bit(0x9ca6);
+
+    // Step 2: Set the data EEPROM Address Pointer
+    send4bitcommand(B0000);
+    send16bit(0x0e00 | addr);
+    send4bitcommand(B0000);
+    send16bit(0x6ea9);
+
+    send4bitcommand(B0000);
+    send16bit(0x0e00 | addrH);
+    send4bitcommand(B0000);
+    send16bit(0x6eaa);
+
+    // Step 3: Load the data to be written
+    send4bitcommand(B0000);
+    send16bit(0x0e00 | data);
+    send4bitcommand(B0000);
+    send16bit(0x6ea8);
+
+    // Step 4: Enable memory writes
+    send4bitcommand(B0000);
+    send16bit(0xa4a6);
+
+    // Step 5: Initiate write
+    send4bitcommand(B0000);
+    send16bit(0x82a6);
+
+    // Step 6: Poll WR bit, repeat until the bit is clear
+    byte wr = 0x01;
+    while(wr & 0x01) {
+        send4bitcommand(B0000);
+        send16bit(0x50a6);
+        send4bitcommand(B0000);
+        send16bit(0x6ef5);
+        send4bitcommand(B0000);
+        send16bit(0x0000);
+
+        send4bitcommand(B0010);
+        pinMode(PGD, INPUT);
+        digitalWrite(PGD, LOW);
+
+        delayMicroseconds(P5us);
+
+        for (byte i = 0; i < 8; i++) { //read
+            digitalWrite(PGC, HIGH);
+            digitalWrite(PGC, LOW);
+        }
+
+        delayMicroseconds(P6us);
+
+        byte value = 0;
+        for (byte i = 0; i < 8; i++) { //shift out
+            digitalWrite(PGC, HIGH);
+            digitalWrite(PGC, LOW);
+            if (digitalRead(PGD) == HIGH)
+                value += 1 << i; //sample PGD
+        }
+        wr = value;
+
+        pinMode(PGD, OUTPUT);
+        digitalWrite(PGD, LOW);
+
+        delayMicroseconds(P5us);
+    }
+
+    // Step 7: Hold PGC low for time P10
+    delay(P10us);
+
+    // Step 8: Disable writes
+    send4bitcommand (B0000);
+    send16bit(0x94a6);
+}
+
+void idBuffer() {
+
+    //step 1
+    send4bitcommand (B0000);
+    send16bit(0x8ea6);
+    send4bitcommand(B0000);
+    send16bit(0x9ca6);
+
+    //step 2
+    send4bitcommand(B0000);
+    send16bit(0x0e20);
+    send4bitcommand(B0000);
+    send16bit(0x6ef8);
+
+    send4bitcommand(B0000);
+    send16bit(0x0e00);
+    send4bitcommand(B0000);
+    send16bit(0x6ef7);
+
+    send4bitcommand(B0000);
+    send16bit(0x0e00);
+    send4bitcommand(B0000);
+    send16bit(0x6ef6);
+
+    //step 3
+    send4bitcommand (B1101);
+    send16bit(buffer[1] << 8 | buffer[0]);
+    send4bitcommand (B1101);
+    send16bit(buffer[3] << 8 | buffer[2]);
+    send4bitcommand (B1101);
+    send16bit(buffer[5] << 8 | buffer[4]);
+    send4bitcommand (B1111);
+    send16bit(buffer[7] << 8 | buffer[6]);
+
+    //nop
+    digitalWrite(PGC, HIGH);
+    digitalWrite(PGC, LOW);
+
+    digitalWrite(PGC, HIGH);
+    digitalWrite(PGC, LOW);
+
+    digitalWrite(PGC, HIGH);
+    digitalWrite(PGC, LOW);
+
+    digitalWrite(PGC, HIGH);
+    delay(1);
+    digitalWrite(PGC, LOW);
+    delayMicroseconds(100);
+
+    send16bit(0x0000);
+
+    //done
+
 }
 
 void programBuffer(byte usb, byte msb, byte lsb) {
