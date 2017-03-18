@@ -22,7 +22,7 @@ byte buffer[32];
 byte address[3];
 
 void setup() {
-    Serial.begin(38400);
+    Serial.begin(2000000);
     pinMode(PGC, OUTPUT);
     pinMode(PGD, OUTPUT);
     pinMode(PGM, OUTPUT);
