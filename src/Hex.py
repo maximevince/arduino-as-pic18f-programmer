@@ -24,8 +24,12 @@ import sys
 class Hex:
     def __init__(self, fileName):
         self.memory = [0] * 0x8000
+        self.havememory = [0] * (0x8000/0x20)
         self.eeprom = [0] * 0x100
+        self.haveeeprom = [0] * (0x100/0x20)
+
         self.id = [0] * 0x8
+
 
         self.offset = 0
         self.fuseValue = [0] * 0xF
@@ -36,10 +40,13 @@ class Hex:
 
         for i in range(0x8000):
             self.memory[i] = 0xFF
+            self.havememory[i/0x20] = 0
         for i in range(0x100):
-            self.eeprom[i] = 0xFF
+            self.eeprom[i] = 0
+            self.haveeeprom[i/0x20] = 0
         for i in range(0x8):
-            self.id[i] = 0xFF
+            self.id[i] = 0
+            self.haveid = 0
         for i in range(0x0F):
             self.fuseStatus[i] = 0
 
@@ -55,11 +62,20 @@ class Hex:
     def getData(self, address):
         return self.memory[address]
 
+    def haveData(self, address):
+            return self.havememory[address/0x20]
+
     def getEEPROM(self, address):
         return self.eeprom[address]
 
+    def haveEEPROM(self, address):
+        return self.haveeeprom[address/0x20]
+
     def getID(self, address):
         return self.id[address]
+
+    def haveID(self):
+        return self.haveid
 
     def fuseChanged(self, fuseID):
         return self.fuseStatus[fuseID]
@@ -124,10 +140,14 @@ class Hex:
                     if self.memory[iAddress + i * 2 + self.offset] == -1:
                         return 1
 
+                    self.havememory[(iAddress + i * 2 + self.offset)/0x20] = 1
+
                     buf = buf[2:]
                     self.memory[iAddress + i * 2 + self.offset + 1] = int(buf[:2], 16)
                     if self.memory[iAddress + i * 2 + self.offset + 1] == -1:
                         return 1
+
+                    self.havememory[(iAddress + i * 2 + self.offset + 1)/0x20] = 1
 
             # Id
             elif iAddress + self.offset >= 0x200000 and iAddress + self.offset <= 0x200007:
@@ -136,6 +156,8 @@ class Hex:
                     self.id[iAddress + self.offset + i - 0x200000] = int(buf[:2], 16)
                     if int(buf[:2], 16) == -1:
                         return 1
+
+                    self.haveid = 1
 
             # Fuse values
             elif iAddress + self.offset >= 0x300000 and iAddress + self.offset <= 0x30000F:
@@ -155,10 +177,14 @@ class Hex:
                     if self.eeprom[iAddress + i * 2 + self.offset - 0xF00000] == -1:
                         return 1
 
+                    self.haveeeprom[(iAddress + i * 2 + self.offset - 0xF00000)/0x20] = 1
+
                     buf = buf[2:]
                     self.eeprom[iAddress + i * 2 + self.offset - 0xF00000 + 1] = int(buf[:2], 16)
                     if self.eeprom[iAddress + i * 2 + self.offset - 0xF00000 + 1] == -1:
                         return 1
+
+                    self.haveeeprom[(iAddress + i * 2 + self.offset - 0xF00000 + 1)/0x20] = 1
 
             # Unknown data
             else:

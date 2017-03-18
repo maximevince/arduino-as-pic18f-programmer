@@ -84,7 +84,7 @@ def main():
 
     # Say hello to Arduino
     arduino.flushInput()
-    arduino.write('HX' + '\r\n')
+    arduino.write('HX')
     if arduino.read() == 'H':
         # If Arduino responds, check for the mcu
         print ("\tSuccess")
@@ -99,7 +99,7 @@ def main():
 
         if not mcu_found:
             arduino.flushInput()
-            arduino.write('DX' + '\r\n')  # asking Arduino for the DeviceID
+            arduino.write('DX')  # asking Arduino for the DeviceID
             deviceID = ord(arduino.read()) + ord(arduino.read()) * 256
 
             for mcu, ID in mcus:
@@ -111,7 +111,7 @@ def main():
             # Perform Bulk Erase
             print "Erasing chip............",
             arduino.flushInput()
-            arduino.write('EX' + '\r\n')
+            arduino.write('EX')
             if arduino.read() == "K":
                 print "\tSuccess"
 
@@ -126,7 +126,7 @@ def main():
                     address = 0
                     while address < 0x8000:
                         for i in range(0x20):
-                            if hexFile.getData(address + i) != 0xFF:
+                            if hexFile.haveData(address + i):
                                 buf = "W"
                                 buf += str(hex(address)[2:].zfill(4))
                                 for j in range(0x20):
@@ -142,27 +142,24 @@ def main():
                     print "\tSuccess"
 
                     # Program IDs
-                    print "Programming ID memory...",
-                    if verbose:
-                        print "\n",
-                    # ID 0x200000 - 0x200007
-                    address = 0
-                    while address < 0x8:
-                        for i in range(0x8):
-                            if hexFile.getID(address + i) != 0xFF:
-                                buf = "W"
-                                buf += str(hex(address + 0x200000)[2:].zfill(6))
-                                for j in range(0x8):
-                                    buf += str(hex(hexFile.getID(address + j))[2:].zfill(2))
-                                buf += "X"
-                                if verbose:
-                                    print buf
-                                arduino.flushInput()
-                                arduino.write(buf.upper())
-                                arduino.read()
-                                break
-                        address += 0x8
-                    print "\tSuccess"
+                    if hexFile.haveID():
+                        print "Programming ID memory...",
+                        if verbose:
+                            print "\n",
+                        # ID 0x200000 - 0x200007
+                        address = 0
+
+                        buf = "W"
+                        buf += str(hex(address + 0x200000)[2:].zfill(6))
+                        for j in range(0x8):
+                            buf += str(hex(hexFile.getID(address + j))[2:].zfill(2))
+                        buf += "X"
+                        if verbose:
+                            print buf
+                        arduino.flushInput()
+                        arduino.write(buf.upper())
+                        arduino.read()
+                        print "\tSuccess"
 
                     # Program Data EE
                     # TODO only some parts have EEPROM
@@ -173,7 +170,7 @@ def main():
                     address = 0
                     while address < 0x100:
                         for i in range(0x20):
-                            if hexFile.getEEPROM(address + i) != 0xFF:
+                            if hexFile.haveEEPROM(address + i):
                                 buf = "W"
                                 buf += str(hex(address + 0xF00000)[2:].zfill(6))
                                 for j in range(0x20):
