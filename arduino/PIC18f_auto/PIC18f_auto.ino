@@ -11,6 +11,7 @@
 #define P10us 100
 #define P5us 1
 #define P6us 1
+#define P11ms 5
 
 String inputString = "";
 boolean stringComplete = false;
@@ -142,13 +143,15 @@ void mainFunction() {
 
         ////erase
         erase_all();
+        delay(1);
+        erase_eeprom();
 
         digitalWrite(PGM, LOW);
         digitalWrite(MCLR, LOW);
 
-        Serial.print("K");
 
         nullString();
+        Serial.print("K");
     }
 
     if (stringComplete && inputString.charAt(0) == 'R') { //READ
@@ -193,8 +196,8 @@ void mainFunction() {
     // Say hello
     if (stringComplete && inputString.charAt(0) == 'H') {
         delay(1);
-        Serial.print("H");
         nullString();
+        Serial.print("H");
     }
 
     if (stringComplete && inputString.charAt(0) == 'C') { //config
@@ -353,11 +356,69 @@ void erase_all() { //for some reason the chip stops respone, just reconnect volt
 
     digitalWrite(PGD, LOW);
 
-    delay(2);
+    delay(P11ms);
 
     digitalWrite(PGD, HIGH);
 
 }
+
+
+void erase_eeprom() { //for some reason the chip stops respone, just reconnect voltage
+
+    send4bitcommand (B0000);
+    send16bit(0x0e3c); //
+    send4bitcommand(B0000);
+    send16bit(0x6ef8);
+
+    send4bitcommand(B0000);
+    send16bit(0x0e00); //
+    send4bitcommand(B0000);
+    send16bit(0x6ef7);
+
+    send4bitcommand(B0000);
+    send16bit(0x0e05); //
+    send4bitcommand(B0000);
+    send16bit(0x6ef6);
+
+    send4bitcommand (B1100);
+    send16bit(0x0000); //
+
+    send4bitcommand(B0000);
+    send16bit(0x0e3c); //
+    send4bitcommand(B0000);
+    send16bit(0x6ef8);
+
+    send4bitcommand(B0000);
+    send16bit(0x0e00); //
+    send4bitcommand(B0000);
+    send16bit(0x6ef7);
+
+    send4bitcommand(B0000);
+    send16bit(0x0e04); //
+    send4bitcommand(B0000);
+    send16bit(0x6ef6);
+
+    send4bitcommand(B1100);
+    send16bit(0x8484);
+
+    send4bitcommand(B0000); //
+    send16bit(0x0000); //
+
+    delay(2);
+
+    send4bitcommand(B0000); //
+    send16bit(0x0000); //
+
+    delay(2);
+
+    digitalWrite(PGD, LOW);
+
+    delay(P11ms);
+
+    digitalWrite(PGD, HIGH);
+
+}
+
 
 void configWrite(byte address, byte data) {
 
@@ -482,6 +543,25 @@ void eepromWrite(byte addr, byte addrH, byte data) {
     // Step 8: Disable writes
     send4bitcommand (B0000);
     send16bit(0x94a6);
+    
+    //nop
+    digitalWrite(PGC, HIGH);
+    digitalWrite(PGC, LOW);
+
+    digitalWrite(PGC, HIGH);
+    digitalWrite(PGC, LOW);
+
+    digitalWrite(PGC, HIGH);
+    digitalWrite(PGC, LOW);
+
+    digitalWrite(PGC, HIGH);
+    delay(1);
+    digitalWrite(PGC, LOW);
+    delayMicroseconds(100);
+
+    send16bit(0x0000);
+
+    //done
 }
 
 void idBuffer() {
