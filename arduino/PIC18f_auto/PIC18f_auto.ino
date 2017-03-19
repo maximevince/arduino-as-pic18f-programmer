@@ -121,7 +121,7 @@ void mainFunction() {
         } else if (address[2] == 0xf0) {
             // EEPROM Data
             for(int i=0;i<data;i++) {
-                if (buffer[i] != 0x00) { // Speedup, eeprom is erased, only write if bits change
+                if (buffer[i] != 0xFF) { // Speedup, eeprom is erased, only write if bits change
                     eepromWrite(address[1],address[0]+i, buffer[i]);
                 }
             }
@@ -290,7 +290,7 @@ byte readFlash(byte usb, byte msb, byte lsb) {
 
 }
 
-byte readEEPROM(byte msb, byte lsb) {
+byte readEEPROM(byte addrH, byte addr) {
 
     byte value = 0;
 
@@ -302,12 +302,12 @@ byte readEEPROM(byte msb, byte lsb) {
 
     // Step 2: Set the data EEPROM Address Pointer
     send4bitcommand(B0000);
-    send16bit(0x0e00 | msb);
+    send16bit(0x0e00 | addr);
     send4bitcommand(B0000);
     send16bit(0x6ea9);
 
     send4bitcommand(B0000);
-    send16bit(0x0e00 | lsb);
+    send16bit(0x0e00 | addrH);
     send4bitcommand(B0000);
     send16bit(0x6eaa);
 
@@ -328,18 +328,17 @@ byte readEEPROM(byte msb, byte lsb) {
     pinMode(PGD, INPUT);
     digitalWrite(PGD, LOW);
 
+    for (byte i = 0; i < 8; i++) { //LSB undefined
+        digitalWrite(PGC, HIGH);
+        digitalWrite(PGC, LOW);
+    }
+
     for (byte i = 0; i < 8; i++) { //shift out MSB
         digitalWrite(PGC, HIGH);
         digitalWrite(PGC, LOW);
         if (digitalRead(PGD) == HIGH)
             value += 1 << i; //sample PGD
     }
-
-    for (byte i = 0; i < 8; i++) { //LSB undefined
-        digitalWrite(PGC, HIGH);
-        digitalWrite(PGC, LOW);
-    }
-
 
     return value;
 
@@ -532,7 +531,7 @@ void configWrite(byte address, byte data) {
     send16bit(0x0000);
 }
 
-void eepromWrite(byte addr, byte addrH, byte data) {
+void eepromWrite(byte addrH, byte addr, byte data) {
     // Step 1: direct access to data EEPROM
     send4bitcommand (B0000);
     send16bit(0x9ea6);
@@ -558,7 +557,7 @@ void eepromWrite(byte addr, byte addrH, byte data) {
 
     // Step 4: Enable memory writes
     send4bitcommand(B0000);
-    send16bit(0xa4a6);
+    send16bit(0x84a6);
 
     // Step 5: Initiate write
     send4bitcommand(B0000);
@@ -603,7 +602,7 @@ void eepromWrite(byte addr, byte addrH, byte data) {
     }
 
     // Step 7: Hold PGC low for time P10
-    delay(P10us);
+    delayMicroseconds(P10us);
 
     // Step 8: Disable writes
     send4bitcommand (B0000);

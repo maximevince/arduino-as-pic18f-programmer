@@ -33,7 +33,7 @@ def getOut():
 
 def main():
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], 'hp:aP:i:lev', ['help', 'port=', 'list', 'erase'])
+        options, arguments = getopt.getopt(sys.argv[1:], 'hp:aP:i:levV', ['help', 'port=', 'list', 'erase'])
     except getopt.error, msg:
         print msg
         getOut()
@@ -43,6 +43,7 @@ def main():
     FILENAME = ""
     ERASE_MODE = False
     verbose = False
+    extraVerbose = False
 
     for opt, arg in options:
         if opt in ('-h', '--help'):
@@ -62,6 +63,9 @@ def main():
             PORT = arg
         elif opt in ('-i'):
             FILENAME = arg
+        elif opt in ('-V'):
+            extraVerbose = True
+            verbose = True
         elif opt in ('-v'):
             verbose = True
 
@@ -255,10 +259,17 @@ def main():
                             print buf
 
                         # Compare
-                        c, buf = buf[:1], buf[1:]
+                        c = buf[:1]
+                        if c == "K":
+                            #workaround python serial bug... K received twice!
+                            # remove R
+                            buf = buf[1:]
+                            c = buf[:1]
                         if c != "R":
                             print "abort; wrong command received from arduino"
                             return 1
+                        # remove R
+                        buf = buf[1:]
 
                         iAddress, buf = int(buf[:6], 16), buf[6:]
                         for j in range(0x8):
@@ -300,10 +311,17 @@ def main():
                                 print buf
 
                             # Compare
-                            c, buf = buf[:1], buf[1:]
+                            c = buf[:1]
+                            if c == "K":
+                                #workaround python serial bug... K received twice!
+                                # remove R
+                                buf = buf[1:]
+                                c = buf[:1]
                             if c != "R":
                                 print "abort; wrong command received from arduino"
                                 return 1
+                            # remove R
+                            buf = buf[1:]
 
                             iAddress, buf = int(buf[:6], 16), buf[6:]
                             for j in range(0x20):
@@ -326,7 +344,8 @@ def main():
                         if hexFile.fuseChanged(i):
                             buf = "C" + hex(i)[2:] + hex(hexFile.getFuse(i))[2:].zfill(2) + "X"
                             if verbose:
-                                print "fuse "+str(hex(i))+" changed to "+str(hex(hexFile.getFuse(i)))
+                                if extraVerbose:
+                                    print "fuse "+str(hex(i))+" changed to "+str(hex(hexFile.getFuse(i)))
                                 print buf
                             arduino.flushInput()
                             arduino.write(buf.upper())
