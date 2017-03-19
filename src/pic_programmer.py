@@ -33,7 +33,7 @@ def getOut():
 
 def main():
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], 'hp:aP:i:le:lv', ['help', 'port=', 'list', 'erase'])
+        options, arguments = getopt.getopt(sys.argv[1:], 'hp:aP:i:lev', ['help', 'port=', 'list', 'erase'])
     except getopt.error, msg:
         print msg
         getOut()
