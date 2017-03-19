@@ -162,16 +162,18 @@ void mainFunction() {
         address[1] = char2byte(inputString.charAt(4), inputString.charAt(3));
         address[0] = char2byte(inputString.charAt(6), inputString.charAt(5));
 
+        Serial.print("K");
         //read
-
+        Serial.print("R");
         temp = 0;
 
         temp = ((long) address[2]) << (16); //doesn't work with out (long)
         temp |= ((long) address[1]) << (8);
         temp |= (long) address[0];
-
-        Serial.print(temp, HEX);
-        Serial.print(":");
+        
+        serialPrintHex(address[2]);
+        serialPrintHex(address[1]);
+        serialPrintHex(address[0]);
 
         digitalWrite(PGM, HIGH);
         digitalWrite(MCLR, HIGH);
@@ -181,18 +183,19 @@ void mainFunction() {
             address[2] = byte((temp & 0xFF0000) >> 16);
             address[1] = byte((temp & 0xFF00) >> 8);
             address[0] = byte(temp & 0xFF);
-            Serial.print(readFlash(address[2], address[1], address[0]), HEX);
-            Serial.print(" ");
+            
+            byte r = readFlash(address[2], address[1], address[0]);
+            serialPrintHex(r);
+            
             temp++;
         }
 
-        Serial.println("");
 
         digitalWrite(PGM, LOW);
         digitalWrite(MCLR, LOW);
-
         nullString();
-        Serial.print("K");
+        Serial.println("X");
+
     }
 
     // Say hello
@@ -822,5 +825,12 @@ uint16_t checkPIC() {
      else
      return 0;*/
 
+}
+
+void serialPrintHex(byte b) { 
+    if (b<0x10) {
+        Serial.print("0");
+    }
+    Serial.print(b, HEX); 
 }
 

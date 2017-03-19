@@ -187,7 +187,51 @@ def main():
                     print "\tSuccess"
 
                     # verify Program
-                    # TODO
+                    print "Verify flash memory...",
+                    verification = 1
+                    if verbose:
+                        print "\n",
+                    address = 0
+                    while address < 0x8000:
+                        if hexFile.haveData(address + i):
+
+                            # Send read command
+                            buf = "R"
+                            buf += str(hex(address)[2:].zfill(6))
+                            buf += "X"
+                            arduino.flushInput()
+                            arduino.write((buf).upper())
+                            arduino.read()
+
+                            # Recive data
+                            buf = ""
+                            r = arduino.read()
+                            while r != "X":
+                                buf += r
+                                r = arduino.read()
+                            buf += r
+
+                            if verbose:
+                                print buf
+
+                            # Compare
+                            c, buf = buf[:1], buf[1:]
+                            if c != "R":
+                                print "abort; wrong command recived from arduino"
+                                return 1
+
+                            iAddress, buf = int(buf[:6], 16), buf[6:]
+                            for j in range(0x20):
+                                data, buf = int(buf[:2], 16), buf[2:]
+                                if hexFile.getData(iAddress + j) != data:
+                                    print "verification failed "+str(hex(hexFile.getData(iAddress + j)))[2:].zfill(2)+" do not match "+str(hex(data))[2:].zfill(2)
+                                    verification = 0
+
+                        address += 0x20
+                    if verification == 0:
+                        print "\tFailed"
+                    else:
+                        print "\tSuccess"
 
                     # verify IDs
                     # TODO

@@ -37,6 +37,7 @@ version 0.3
  - Support loading EEPROM, Id and comment sections from HEX file.
  - Programming is faster
    Arduino UNO serial USB operate at 2000000 baud instead of 9600 baud
+ - Verification that program memory have been programmed correctly
 
 version 0.2 - has a new PC-side software written in Python. It's simpler than the old one and a bit faster, it uses the pySerial library and allows to program the following microcontrollers:
 	18F2420
