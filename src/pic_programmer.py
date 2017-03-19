@@ -125,19 +125,17 @@ def main():
                         print "\n",
                     address = 0
                     while address < 0x8000:
-                        for i in range(0x20):
-                            if hexFile.haveData(address + i):
-                                buf = "W"
-                                buf += str(hex(address)[2:].zfill(4))
-                                for j in range(0x20):
-                                    buf += str(hex(hexFile.getData(address + j))[2:].zfill(2))
-                                buf += "X"
-                                if verbose:
-                                    print buf
-                                arduino.flushInput()
-                                arduino.write(buf.upper())
-                                arduino.read()
-                                break
+                        if hexFile.haveData(address):
+                            buf = "W"
+                            buf += str(hex(address)[2:].zfill(4))
+                            for j in range(0x20):
+                                buf += str(hex(hexFile.getData(address + j))[2:].zfill(2))
+                            buf += "X"
+                            if verbose:
+                                print buf
+                            arduino.flushInput()
+                            arduino.write(buf.upper())
+                            arduino.read()
                         address += 0x20
                     print "\tSuccess"
 
@@ -169,19 +167,17 @@ def main():
                     # EEPROM 0xF00000 - 0xF00100
                     address = 0
                     while address < 0x100:
-                        for i in range(0x20):
-                            if hexFile.haveEEPROM(address + i):
-                                buf = "W"
-                                buf += str(hex(address + 0xF00000)[2:].zfill(6))
-                                for j in range(0x20):
-                                    buf += str(hex(hexFile.getEEPROM(address + j))[2:].zfill(2))
-                                buf += "X"
-                                if verbose:
-                                    print buf
-                                arduino.flushInput()
-                                arduino.write(buf.upper())
-                                arduino.read()
-                                break
+                        if hexFile.haveEEPROM(address):
+                            buf = "W"
+                            buf += str(hex(address + 0xF00000)[2:].zfill(6))
+                            for j in range(0x20):
+                                buf += str(hex(hexFile.getEEPROM(address + j))[2:].zfill(2))
+                            buf += "X"
+                            if verbose:
+                                print buf
+                            arduino.flushInput()
+                            arduino.write(buf.upper())
+                            arduino.read()
                         address += 0x20
 
                     print "\tSuccess"
@@ -193,7 +189,7 @@ def main():
                         print "\n",
                     address = 0
                     while address < 0x8000:
-                        if hexFile.haveData(address + i):
+                        if hexFile.haveData(address):
 
                             # Send read command
                             buf = "R"
@@ -282,7 +278,7 @@ def main():
                         print "\n",
                     address = 0
                     while address < 0x100:
-                        if hexFile.haveEEPROM(address + i):
+                        if hexFile.haveEEPROM(address):
 
                             # Send read command
                             buf = "R"
