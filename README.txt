@@ -1,8 +1,10 @@
-﻿Version 0.2
+﻿Version 0.3
 
 Copyright (C) 2012  kirill Kulakov - https://sites.google.com/site/thehighspark/home
 
 Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/arduino-as-pic18f-programmer-for-linux
+
+Improved by Xerxes Rånby - https://bitbucket.org/xranby/arduino-as-pic18f-programmer-for-linux
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,6 +20,11 @@ Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/ardui
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ----------------------------------------------------------------
+
+INSTALLATION:
+
+ - Debian/Ubuntu: 
+   apt install arduino python-serial
 
 HOW TO:
 
