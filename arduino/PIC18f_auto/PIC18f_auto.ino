@@ -184,7 +184,12 @@ void mainFunction() {
             address[1] = byte((temp & 0xFF00) >> 8);
             address[0] = byte(temp & 0xFF);
             
-            byte r = readFlash(address[2], address[1], address[0]);
+            byte r;
+            if (address[2] == 0xf0) {
+                r = readEEPROM(address[1], address[0]);
+            } else {
+                r = readFlash(address[2], address[1], address[0]);
+            }
             serialPrintHex(r);
             
             temp++;
@@ -280,6 +285,61 @@ byte readFlash(byte usb, byte msb, byte lsb) {
         if (digitalRead(PGD) == HIGH)
             value += 1 << i; //sample PGD
     }
+
+    return value;
+
+}
+
+byte readEEPROM(byte msb, byte lsb) {
+
+    byte value = 0;
+
+    // Step 1: Direct access to data EEPROM
+    send4bitcommand (B0000);
+    send16bit(0x9ea6);
+    send4bitcommand(B0000);
+    send16bit(0x9ca6);
+
+    // Step 2: Set the data EEPROM Address Pointer
+    send4bitcommand(B0000);
+    send16bit(0x0e00 | msb);
+    send4bitcommand(B0000);
+    send16bit(0x6ea9);
+
+    send4bitcommand(B0000);
+    send16bit(0x0e00 | lsb);
+    send4bitcommand(B0000);
+    send16bit(0x6eaa);
+
+    // Step 3: Initiate a memory read
+    send4bitcommand (B0000);
+    send16bit(0x80a6);
+    
+    //Step 4: Load data into the Serial Data Holding register
+    send4bitcommand(B0000);
+    send16bit(0x50a8);
+    send4bitcommand(B0000);
+    send16bit(0x6ef5);
+    send4bitcommand(B0000);
+    send16bit(0x0000);
+
+    send4bitcommand (B0010);
+    
+    pinMode(PGD, INPUT);
+    digitalWrite(PGD, LOW);
+
+    for (byte i = 0; i < 8; i++) { //shift out MSB
+        digitalWrite(PGC, HIGH);
+        digitalWrite(PGC, LOW);
+        if (digitalRead(PGD) == HIGH)
+            value += 1 << i; //sample PGD
+    }
+
+    for (byte i = 0; i < 8; i++) { //LSB undefined
+        digitalWrite(PGC, HIGH);
+        digitalWrite(PGC, LOW);
+    }
+
 
     return value;
 
