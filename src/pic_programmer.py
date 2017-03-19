@@ -234,9 +234,48 @@ def main():
                         print "\tSuccess"
 
                     # verify IDs
-                    # TODO
+                    print "Verify ID memory...",
+                    verification = 1
+                    if verbose:
+                        print "\n",
+                    if hexFile.haveID():
+                        # Send read command
+                        buf = "R"
+                        buf += str(hex(0x200000)[2:].zfill(6))
+                        buf += "X"
+                        arduino.flushInput()
+                        arduino.write((buf).upper())
+                        arduino.read()
 
-                    # verify Data
+                        # Recive data
+                        buf = ""
+                        r = arduino.read()
+                        while r != "X":
+                            buf += r
+                            r = arduino.read()
+                        buf += r
+
+                        if verbose:
+                            print buf
+
+                        # Compare
+                        c, buf = buf[:1], buf[1:]
+                        if c != "R":
+                            print "abort; wrong command recived from arduino"
+                            return 1
+
+                        iAddress, buf = int(buf[:6], 16), buf[6:]
+                        for j in range(0x8):
+                            data, buf = int(buf[:2], 16), buf[2:]
+                            if hexFile.getID(iAddress - 0x200000 + j) != data:
+                                print "verification failed "+str(hex(hexFile.getID(iAddress - 0x200000 + j)))[2:].zfill(2)+" do not match "+str(hex(data))[2:].zfill(2)
+                                verification = 0
+                    if verification == 0:
+                        print "\tFailed"
+                    else:
+                        print "\tSuccess"
+
+                    # verify EEPROM Data
                     # TODO
 
                     # program configuration bits
