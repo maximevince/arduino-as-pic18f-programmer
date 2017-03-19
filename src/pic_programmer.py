@@ -203,7 +203,7 @@ def main():
                             arduino.write((buf).upper())
                             arduino.read()
 
-                            # Recive data
+                            # Receive data
                             buf = ""
                             r = arduino.read()
                             while r != "X":
@@ -217,7 +217,7 @@ def main():
                             # Compare
                             c, buf = buf[:1], buf[1:]
                             if c != "R":
-                                print "abort; wrong command recived from arduino"
+                                print "abort; wrong command received from arduino"
                                 return 1
 
                             iAddress, buf = int(buf[:6], 16), buf[6:]
@@ -247,7 +247,7 @@ def main():
                         arduino.write((buf).upper())
                         arduino.read()
 
-                        # Recive data
+                        # Receive data
                         buf = ""
                         r = arduino.read()
                         while r != "X":
@@ -261,7 +261,7 @@ def main():
                         # Compare
                         c, buf = buf[:1], buf[1:]
                         if c != "R":
-                            print "abort; wrong command recived from arduino"
+                            print "abort; wrong command received from arduino"
                             return 1
 
                         iAddress, buf = int(buf[:6], 16), buf[6:]
@@ -276,7 +276,51 @@ def main():
                         print "\tSuccess"
 
                     # verify EEPROM Data
-                    # TODO
+                    print "Verify EEPROM memory...",
+                    verification = 1
+                    if verbose:
+                        print "\n",
+                    address = 0
+                    while address < 0x100:
+                        if hexFile.haveEEPROM(address + i):
+
+                            # Send read command
+                            buf = "R"
+                            buf += str(hex(address + 0xF00000)[2:].zfill(6))
+                            buf += "X"
+                            arduino.flushInput()
+                            arduino.write((buf).upper())
+                            arduino.read()
+
+                            # Receive data
+                            buf = ""
+                            r = arduino.read()
+                            while r != "X":
+                                buf += r
+                                r = arduino.read()
+                            buf += r
+
+                            if verbose:
+                                print buf
+
+                            # Compare
+                            c, buf = buf[:1], buf[1:]
+                            if c != "R":
+                                print "abort; wrong command received from arduino"
+                                return 1
+
+                            iAddress, buf = int(buf[:6], 16), buf[6:]
+                            for j in range(0x20):
+                                data, buf = int(buf[:2], 16), buf[2:]
+                                if hexFile.getEEPROM(iAddress - 0xF00000 + j) != data:
+                                    print "verification failed "+str(hex(hexFile.getEEPROM(iAddress - 0xF00000 + j)))[2:].zfill(2)+" do not match "+str(hex(data))[2:].zfill(2)
+                                    verification = 0
+
+                        address += 0x20
+                    if verification == 0:
+                        print "\tFailed"
+                    else:
+                        print "\tSuccess"
 
                     # program configuration bits
                     print "Programming the fuse bits...",
