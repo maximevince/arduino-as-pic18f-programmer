@@ -1,8 +1,10 @@
-﻿Version 0.2
+﻿Version 0.3
 
 Copyright (C) 2012  kirill Kulakov - https://sites.google.com/site/thehighspark/home
 
 Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/arduino-as-pic18f-programmer-for-linux
+
+Improved by Xerxes Rånby - https://bitbucket.org/xranby/arduino-as-pic18f-programmer-for-linux
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,6 +21,11 @@ Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/ardui
 
 ----------------------------------------------------------------
 
+INSTALLATION:
+
+ - Debian/Ubuntu: 
+   apt install arduino python-serial
+
 HOW TO:
 
 1. Upload the sketch to the arduino
@@ -32,6 +39,12 @@ Thats it!
 ----------------------------------------------------------------
 
 RELEASE:
+
+version 0.3
+ - Support loading EEPROM, Id and comment sections from HEX file.
+ - Programming is faster
+   Arduino UNO serial USB operate at 2000000 baud instead of 9600 baud
+ - Verification that Program, ID & EEPROM memory have been programmed correctly
 
 version 0.2 - has a new PC-side software written in Python. It's simpler than the old one and a bit faster, it uses the pySerial library and allows to program the following microcontrollers:
 	18F2420

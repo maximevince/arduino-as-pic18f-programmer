@@ -1,8 +1,10 @@
-Arduino PIC Programmer v0.2
+Arduino PIC Programmer v0.3
 
 Options:
 
   -h, --help	Shows this message.
+  -v            Verbose output.
+  -V            Extra Verbose output.
   -l, --list	Shows a list of supported devices.
   -e, --erase	Erase the microcontroller flash memory.
   -P, --port	(optional) Select a serial port.
