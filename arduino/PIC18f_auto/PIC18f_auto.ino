@@ -1,10 +1,14 @@
 // I wrote it according to the following datasheet:
 // http://ww1.microchip.com/downloads/en/DeviceDoc/39622L.pdf
 
+// Modified for PIC18F2xK22
+// http://ww1.microchip.com/downloads/en/devicedoc/41398b.pdf
+
+
 //pin out config
 #define PGC 6
 #define PGD 5
-#define PGM 8
+#define PGM 8 /* unused on PIC18F2xK22 */
 #define MCLR 7
 
 // delay constants from page 42 & 43 of 39622L.pdf
@@ -12,6 +16,14 @@
 #define P5us 1
 #define P6us 1
 #define P11ms 5
+
+// page 38, 39
+#define P9 (1+1)
+#define P9A (5+1)
+#define P10 1
+#define P15 1
+#define P18 1
+#define P20 1
 
 String inputString = "";
 boolean stringComplete = false;
@@ -28,15 +40,16 @@ void setup() {
     pinMode(PGM, OUTPUT);
     pinMode(MCLR, OUTPUT);
 
-    inputString.reserve(200);
+    digitalWrite(MCLR, HIGH);
+    Serial.print("ICD-A ready\n");
 
+    inputString.reserve(200);
+    initDevice();
 }
 
 void loop() {
 
-    //turn on the chip (disable programming mode & diable reset)
-    digitalWrite(PGM, LOW);
-    digitalWrite(MCLR, HIGH);
+    //turn on the chip (disable programming mode & disable reset)
     if (Serial.available())
         mainFunction();
 }
@@ -111,12 +124,9 @@ void mainFunction() {
 
         ///Write
 
-        digitalWrite(PGM, HIGH);
-        digitalWrite(MCLR, HIGH);
-
         delay(1);
 
-        if (address[2] == 0x00) {
+        if ((address[2] == 0x00) || (address[2] == 0x01)) {
             programBuffer(address[2], address[1], address[0]);
         } else if (address[2] == 0xf0) {
             // EEPROM Data
@@ -130,27 +140,18 @@ void mainFunction() {
             idBuffer();
         }
 
-        digitalWrite(PGM, LOW);
-        digitalWrite(MCLR, LOW);
-
         Serial.print("K");
     }
 
     endofthisif: ;
 
     if (stringComplete && inputString.charAt(0) == 'E') { //Erase all
-        digitalWrite(PGM, HIGH);
-        digitalWrite(MCLR, HIGH);
         delay(1);
 
         ////erase
         erase_all();
         delay(1);
         erase_eeprom();
-
-        digitalWrite(PGM, LOW);
-        digitalWrite(MCLR, LOW);
-
 
         nullString();
         Serial.print("K");
@@ -175,8 +176,6 @@ void mainFunction() {
         serialPrintHex(address[1]);
         serialPrintHex(address[0]);
 
-        digitalWrite(PGM, HIGH);
-        digitalWrite(MCLR, HIGH);
         delay(1);
 
         for (int i = 0; i < 32; i++) {
@@ -195,12 +194,8 @@ void mainFunction() {
             temp++;
         }
 
-
-        digitalWrite(PGM, LOW);
-        digitalWrite(MCLR, LOW);
         nullString();
         Serial.println("X");
-
     }
 
     // Say hello
@@ -211,75 +206,111 @@ void mainFunction() {
     }
 
     if (stringComplete && inputString.charAt(0) == 'C') { //config
-
-        digitalWrite(PGM, HIGH);
-        digitalWrite(MCLR, HIGH);
         delay(1);
 
         configWrite(char2byte(inputString.charAt(1), '0'),
                 char2byte(inputString.charAt(3), inputString.charAt(2)));
 
-        digitalWrite(PGM, LOW);
-        digitalWrite(MCLR, LOW);
         nullString();
         Serial.print("K");
     }
 
     if (stringComplete && inputString.charAt(0) == 'D') { //read device
-        delay(100);
-        digitalWrite(PGM, HIGH);
-        digitalWrite(MCLR, HIGH);
         delay(1);
-
         uint8_t devID1 = readFlash(0x3f, 0xff, 0xfe) & 0b11100000;
         uint8_t devID2 = readFlash(0x3f, 0xff, 0xff);
         Serial.write(devID1);
         Serial.write(devID2);
 
-        digitalWrite(PGM, LOW);
-        digitalWrite(MCLR, LOW);
+        nullString();
+        Serial.print("K");
+    }
+
+    
+    if (stringComplete && inputString.charAt(0) == 'I') { //init device
+        initDevice();
+
+        nullString();
+        Serial.print("K");
+    }
+
+    if (stringComplete && inputString.charAt(0) == 'J') { //read from device
+        delay(2);
+
+        /* try to read some data */
+        uint8_t devID1 = readFlash(0x3f, 0xff, 0xfe) & 0b11100000;
+        uint8_t devID2 = readFlash(0x3f, 0xff, 0xff);
+
+        char test[100];
+        sprintf(test, "devid: %04x:%04x\n", devID2, devID1);
+        Serial.write(test);
+
         nullString();
         Serial.print("K");
     }
 
     //clear string incase the first CHAR isn't known
-    if (inputString.charAt(0) != 'H' && inputString.charAt(0) != 'E'
-            && inputString.charAt(0) != 'R' && inputString.charAt(0) != 'W'
-            && inputString.charAt(0) != 'C' && inputString.charAt(0) != 'D')
+    char firstchar = inputString.charAt(0);
+    if (firstchar != 'H' && firstchar != 'E'
+            && firstchar != 'R' && firstchar != 'W'
+            && firstchar != 'C' && firstchar != 'D'
+            && firstchar != 'I' && firstchar != 'J') {
         nullString();
+    }
+}
 
+void initDevice(void) {
+    digitalWrite(MCLR, LOW);
+    delay(10);
+    digitalWrite(MCLR, HIGH);
+    delay(10);
+    digitalWrite(MCLR, LOW);
+    delay(P18);
+
+    uint32_t seq = 0x4d434850;
+
+    sendbyte(seq >> 24u);
+    sendbyte(seq >> 16u);
+    sendbyte(seq >>  8u);
+    sendbyte(seq >>  0u);
+
+    delay(P20);
+    digitalWrite(MCLR, HIGH);
+    delay(P15);
 }
 
 byte readFlash(byte usb, byte msb, byte lsb) {
 
     byte value = 0;
 
+    pinMode(PGD, OUTPUT);
+
     send4bitcommand (B0000);
-    send16bit(0x0e00 | usb); //
+    send16bit(0x0e00 | usb);  /* MOVLW usb */
     send4bitcommand(B0000);
-    send16bit(0x6ef8);
+    send16bit(0x6ef8);        /* MOVWF TBLPTRU */
 
     send4bitcommand(B0000);
-    send16bit(0x0e00 | msb); //
+    send16bit(0x0e00 | msb);  /* MOVLW msb */
     send4bitcommand(B0000);
-    send16bit(0x6ef7);
+    send16bit(0x6ef7);        /* MOVWF TBLPTRH */
 
     send4bitcommand(B0000);
-    send16bit(0x0e00 | lsb); //
+    send16bit(0x0e00 | lsb);  /* MOVLW lsb */
     send4bitcommand(B0000);
-    send16bit(0x6ef6);
+    send16bit(0x6ef6);        /* MOVWF TBLPTRL */
 
-    send4bitcommand (B1000); //
+    send4bitcommand (B1000);  /* Table Read */
 
     pinMode(PGD, INPUT);
     digitalWrite(PGD, LOW);
 
-    for (byte i = 0; i < 8; i++) { //read
+    for (byte i = 0; i < 8; i++) { //dummy read 1 byte
         digitalWrite(PGC, HIGH);
         digitalWrite(PGC, LOW);
     }
 
-    for (byte i = 0; i < 8; i++) { //shift out
+    for (byte i = 0; i < 8; i++) { //shift out 1 byte
         digitalWrite(PGC, HIGH);
         digitalWrite(PGC, LOW);
         if (digitalRead(PGD) == HIGH)
@@ -355,6 +386,30 @@ void send4bitcommand(byte data) {
         digitalWrite(PGC, LOW);
     }
 
+}
+
+void sendbyte(byte data) {
+    pinMode(PGD, OUTPUT);
+    for (byte i = 0; i < 8; i++) {
+        if ((0x80 >> i) & data)
+            digitalWrite(PGD, HIGH);
+        else
+            digitalWrite(PGD, LOW);
+        digitalWrite(PGC, HIGH);
+        digitalWrite(PGC, LOW);
+    }
+}
+
+uint8_t readbyte(void) {
+    pinMode(PGD, INPUT);
+    digitalWrite(PGD, LOW);
+    uint8_t val = 0;
+    for (byte i = 0; i < 8; i++) { //shift out
+        digitalWrite(PGC, HIGH);
+        digitalWrite(PGC, LOW);
+        if (digitalRead(PGD) == HIGH)
+            val |= (0x80 >> i); //sample PGD
+    }
 }
 
 void send16bit(unsigned int data) {
@@ -524,7 +579,7 @@ void configWrite(byte address, byte data) {
     digitalWrite(PGC, LOW);
 
     digitalWrite(PGC, HIGH);
-    delay(1);
+    delay(P9A);
     digitalWrite(PGC, LOW);
     delayMicroseconds(100);
 
@@ -619,8 +674,9 @@ void eepromWrite(byte addrH, byte addr, byte data) {
     digitalWrite(PGC, LOW);
 
     digitalWrite(PGC, HIGH);
-    delay(1);
+    delay(P9A);
     digitalWrite(PGC, LOW);
+    delay(P10);
     delayMicroseconds(100);
 
     send16bit(0x0000);
@@ -686,7 +742,7 @@ void idBuffer() {
 void programBuffer(byte usb, byte msb, byte lsb) {
 
     if ((lsb & 0x0F) | ((lsb & 0xF0) >> 4) % 2) {
-        //Serial.println("Error: First digit (refere as HEX) have to be 0, and the second digit have to be even.");
+        //Serial.println("Error: Low nibble (refere as HEX) has to be 0, and the second nibble has to be even.");
         //Serial.println("valid examples: 0x000000 , 0x000060, 0x006320, 0x0063E0");
         //Serial.println("INvalid examples: 0x000004 , 0x000014, 0x006328, 0x0063EA");
         //Serial.println("0,2,4,6,8,A,C,E are even");
@@ -695,37 +751,39 @@ void programBuffer(byte usb, byte msb, byte lsb) {
 
     //step 1
     send4bitcommand (B0000);
-    send16bit(0x8ea6);
+    send16bit(0x8ea6);      /* BSF   EECON1, EEPGD */
     send4bitcommand(B0000);
-    send16bit(0x9ca6);
+    send16bit(0x9ca6);      /* BCF   EECON1, CFGS */
 
     //step 2
     send4bitcommand(B0000);
-    send16bit(0x0e00 | usb); //
+    send16bit(0x0e00 | usb);/* MOVLW <Addr[21:16] */
     send4bitcommand(B0000);
-    send16bit(0x6ef8);
+    send16bit(0x6ef8);      /* MOVWF TBLPTRU */
 
     send4bitcommand(B0000);
-    send16bit(0x0e00 | msb); //
+    send16bit(0x0e00 | msb);/* MOVLW <Addr[15:8]>*/
     send4bitcommand(B0000);
-    send16bit(0x6ef7);
+    send16bit(0x6ef7);      /* MOVWF TBLPTRH */
 
     send4bitcommand(B0000);
-    send16bit(0x0e00 | lsb); //
+    send16bit(0x0e00 | lsb);/* MOVLW <Addr[7:0] */
     send4bitcommand(B0000);
-    send16bit(0x6ef6);
+    send16bit(0x6ef6);      /* MOVWF TBLPTRL */
 
-    //step 3
+    //step 3: Load write buffer. Repeat for all but the last two bytes
     for (byte i = 0; i < 15; i++) {
         send4bitcommand (B1101);
-        send16bit(buffer[(2 * i) + 1] << 8 | buffer[(i * 2)]);
+        send16bit(buffer[(2 * i) + 1] << 8 | buffer[(i * 2)]); /* Write 2 bytes and post-increment address by 2 */
     }
 
-    //step 4
+    //step 4: oad write buffer for last two bytes and start programming
     send4bitcommand (B1111);
     send16bit(buffer[31] << 8 | buffer[30]);
 
     //nop
+    digitalWrite(PGD, LOW);
+    
     digitalWrite(PGC, HIGH);
     digitalWrite(PGC, LOW);
 
@@ -734,10 +792,12 @@ void programBuffer(byte usb, byte msb, byte lsb) {
 
     digitalWrite(PGC, HIGH);
     digitalWrite(PGC, LOW);
-
-    digitalWrite(PGC, HIGH);
     delay(1);
+
+    digitalWrite(PGC, HIGH);
+    delay(P9);
     digitalWrite(PGC, LOW);
+    delay(P10);
     delayMicroseconds(100);
 
     send16bit(0x0000);
@@ -869,12 +929,9 @@ byte char2byte(char lsb, char msb) {
 
 }
 
-uint16_t checkPIC() {
 
-    digitalWrite(PGM, HIGH);
-    digitalWrite(MCLR, HIGH);
-    delay(1);
-
+uint16_t checkPIC()
+{
     uint8_t devid1 = readFlash(0x3f, 0xff, 0xfe);
     uint8_t devid2 = readFlash(0x3f, 0xff, 0xff);
     return ((devid2 << 8) || devid1);
@@ -892,4 +949,3 @@ void serialPrintHex(byte b) {
     }
     Serial.print(b, HEX); 
 }
-

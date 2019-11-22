@@ -23,8 +23,8 @@ import sys
 
 class Hex:
     def __init__(self, fileName):
-        self.memory = [0] * 0x8000
-        self.havememory = [0] * (0x8000/0x20)
+        self.memory = [0] * 0x10000
+        self.havememory = [0] * (0x10000/0x20)
         self.eeprom = [0] * 0x100
         self.haveeeprom = [0] * (0x100/0x20)
 
@@ -38,7 +38,7 @@ class Hex:
         fileSize = int(os.path.getsize(fileName))
         hexFile = open(fileName, 'r')
 
-        for i in range(0x8000):
+        for i in range(0x10000):
             self.memory[i] = 0xFF
             self.havememory[i/0x20] = 0
         for i in range(0x100):
@@ -56,6 +56,7 @@ class Hex:
                 break
             if self.reformat(buf) == 1:
                 print "Hex file not valid."
+                print("Buf: {}".format(buf))
                 sys.exit(2)
         hexFile.close()
 
@@ -89,22 +90,24 @@ class Hex:
 
         # comment
         if hexData.startswith(";"):
-            print hexData
+            print("Comment: {}".format(hexData))
             return 0
 
         iSize, buf = int(buf[:2], 16), buf[2:]
         if iSize == -1:
+            print("iSize {} fail".format(iSize))
             return 1
         iAddress, buf = int(buf[:4], 16), buf[4:]
         if iAddress == -1:
+            print("iAddress {} fail".format(iAddress))
             return 1
         # record type
         iRecord = int(buf[:2], 16)
 
         if iRecord == -1:
+            print("iRecord {} fail".format(iRecord))
             return 1
         elif iRecord == 4:
-
             buf = buf[2:]
             temp = int(buf[:2], 16)
             if temp == -1:
@@ -132,7 +135,7 @@ class Hex:
         elif iRecord == 0:
 
             # Memory
-            if (iAddress + self.offset) < 0x8000:
+            if (iAddress + self.offset) < 0x10000:
                 for i in range(iSize / 2):
                     buf = buf[2:]
 
@@ -188,6 +191,6 @@ class Hex:
 
             # Unknown data
             else:
-                print hex(iAddress + self.offset)
+                print("Unknown address: " + hex(iAddress + self.offset))
                 return 1
         return 0

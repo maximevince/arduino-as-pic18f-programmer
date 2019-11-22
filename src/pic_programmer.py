@@ -23,7 +23,7 @@ import sys
 from Hex import *
 
 mcus = (["18f2455", 0x1260], ["18f2550", 0x1240], ["18f4455", 0x1202], ["18f4550", 0x1200], ["18f2420", 0x1140],
-        ["18f2520", 0x1100], ["18f4420", 0x10C0], ["18f4520", 0x1080])
+        ["18f2520", 0x1100], ["18f4420", 0x10C0], ["18f4520", 0x1080], ["18f26k22", 0x5440] )
 
 
 def getOut():
@@ -75,7 +75,7 @@ def main():
         print "You need to select an hex file with -i option"
         getOut()
 
-    print ("Connecting to arduino..."),
+    print("Connecting to arduino..."),
 
     # Open Serial port
     try:
@@ -91,8 +91,8 @@ def main():
     arduino.write('HX')
     if arduino.read() == 'H':
         # If Arduino responds, check for the mcu
-        print ("\tSuccess")
-        print ("Connecting to the mcu..."),
+        print("\tSuccess")
+        print("Connecting to the mcu..."),
 
         # checking the MCU
         mcu_found = False
@@ -105,10 +105,11 @@ def main():
             arduino.flushInput()
             arduino.write('DX')  # asking Arduino for the DeviceID
             deviceID = ord(arduino.read()) + ord(arduino.read()) * 256
+            #print("\tFound MCU id: {:X}".format(deviceID))
 
             for mcu, ID in mcus:
                 if ID == deviceID:
-                    print "\tYour MCU: " + mcu
+                    print("\tYour MCU: " + mcu)
                     mcu_found = True
 
         if mcu_found:
@@ -117,7 +118,7 @@ def main():
             arduino.flushInput()
             arduino.write('EX')
             if arduino.read() == "K":
-                print "\tSuccess"
+                print("\tSuccess")
 
                 if not ERASE_MODE:
                     # open and parse the hex file
@@ -128,7 +129,7 @@ def main():
                     if verbose:
                         print "\n",
                     address = 0
-                    while address < 0x8000:
+                    while address < 0x10000:
                         if hexFile.haveData(address):
                             buf = "W"
                             buf += str(hex(address)[2:].zfill(4))
@@ -141,6 +142,8 @@ def main():
                             arduino.write(buf.upper())
                             arduino.read()
                         address += 0x20
+                        print("\rFlash write @ 0x{:x}".format(address))
+                        #print "."
                     print "\tSuccess"
 
                     # Program IDs
@@ -182,6 +185,7 @@ def main():
                             arduino.flushInput()
                             arduino.write(buf.upper())
                             arduino.read()
+                            print("\rEEPROM write @ 0x{:x}".format(address))
                         address += 0x20
 
                     print "\tSuccess"
@@ -192,9 +196,9 @@ def main():
                     if verbose:
                         print "\n",
                     address = 0
-                    while address < 0x8000:
+                    while address < 0x10000:
                         if hexFile.haveData(address):
-
+                            print("Verifying addr 0x{:x}".format(address))
                             # Send read command
                             buf = "R"
                             buf += str(hex(address)[2:].zfill(6))
@@ -224,7 +228,7 @@ def main():
                             for j in range(0x20):
                                 data, buf = int(buf[:2], 16), buf[2:]
                                 if hexFile.getData(iAddress + j) != data:
-                                    print "verification failed "+str(hex(hexFile.getData(iAddress + j)))[2:].zfill(2)+" do not match "+str(hex(data))[2:].zfill(2)
+                                    print "verification @ 0x{:x} failed: ".format(iAddress + j) + str(hex(hexFile.getData(iAddress + j)))[2:].zfill(2)+" != readback: "+str(hex(data))[2:].zfill(2)
                                     verification = 0
 
                         address += 0x20
