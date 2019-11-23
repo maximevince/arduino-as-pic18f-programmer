@@ -53,7 +53,6 @@ class Hex:
 
         while True:
             buf = hexFile.readline(128).replace(':','').replace('\n','')
-            print("buf became:\n{}".format(buf))
             if buf == "":
                 break
             if self.reformat(buf) == 1:
@@ -176,7 +175,7 @@ class Hex:
 
             # EEPROM
             elif (iAddress + self.offset) >= 0xF00000 and iAddress + self.offset <= 0xF000FF:
-                for i in range(iSize / 2):
+                for i in range(iSize // 2):
                     buf = buf[2:]
                     self.eeprom[iAddress + i * 2 + self.offset - 0xF00000] = int(buf[:2], 16)
                     if self.eeprom[iAddress + i * 2 + self.offset - 0xF00000] == -1:
