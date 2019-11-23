@@ -1,10 +1,11 @@
-﻿Version 0.3
+﻿# Arduino as PIC18F programmer
 
-Copyright (C) 2012  kirill Kulakov - https://sites.google.com/site/thehighspark/home
+Version 0.4
 
-Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/arduino-as-pic18f-programmer-for-linux
-
-Improved by Xerxes Rånby - https://bitbucket.org/xranby/arduino-as-pic18f-programmer-for-linux
+* 2019 - Added support for PIC18F2xK22/PIC18F4xK22, Python 3 and more by Maxime Vincent - https://github.com/maximevince/arduino-as-pic18f-programmer
+* 2017 - Improved by Xerxes Rånby - https://bitbucket.org/xranby/arduino-as-pic18f-programmer-for-linux
+* 2017 - Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/arduino-as-pic18f-programmer-for-linux
+* Copyright (C) 2012  kirill Kulakov - https://sites.google.com/site/thehighspark/home
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,15 +22,15 @@ Improved by Xerxes Rånby - https://bitbucket.org/xranby/arduino-as-pic18f-progr
 
 ----------------------------------------------------------------
 
-INSTALLATION:
+### INSTALLATION:
 
  - Debian/Ubuntu: 
    apt install arduino python-serial
 
-HOW TO:
+### HOW TO:
 
-1. Upload the sketch to the arduino
-2. Connect the chip to the arduino
+1. Upload the sketch to the arduino (Adjust TOGGLE_MCLR define to your needs)
+2. Connect the chip to the arduino (PGM is not used for PIC18F2xK22/PIC18F4xK22 series)
 3. Run ./pic_programmer.py -i HEX_FILE
 
 * For help run ./pic_programmer.py -h
@@ -38,7 +39,33 @@ Thats it!
 
 ----------------------------------------------------------------
 
-RELEASE:
+### SUPPORTED MCUs:
+
+ * PIC18F2455
+ * PIC18F2550
+ * PIC18F4455
+ * PIC18F4550
+ * PIC18F2420
+ * PIC18F2520
+ * PIC18F4420
+ * PIC18F4520
+ * PIC18F45K22,  PIC18LF45K22
+ * PIC18F25K22,  PIC18LF25K22
+ * PIC18F23K22,  PIC18LF23K22
+ * PIC18F24K22,  PIC18LF24K22
+ * PIC18F26K22,  PIC18LF26K22
+ * PIC18F43K22,  PIC18LF43K22
+ * PIC18F44K22,  PIC18LF44K22
+ * PIC18F46K22,  PIC18LF46K22
+
+----------------------------------------------------------------
+
+### RELEASE NOTES:
+
+version 0.4
+ - Support for PIC18F2xK22/PIC18F4xK22 series
+ - Python 3 support
+ - Code clean-up
 
 version 0.3
  - Support loading EEPROM, Id and comment sections from HEX file.
