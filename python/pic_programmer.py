@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 """
+Copyright (C) 2019       Maxime Vincent
 Copyright (C) 2012-2017  Kirill Kulakov, Jose Carlos Granja & Xerxes Ranby
 
     This program is free software: you can redistribute it and/or modify
@@ -24,7 +25,7 @@ from Hex import *
 
 mcus = (["18f2455", 0x1260], ["18f2550", 0x1240], ["18f4455", 0x1202], ["18f4550", 0x1200], ["18f2420", 0x1140],
         ["18f2520", 0x1100], ["18f4420", 0x10C0], ["18f4520", 0x1080], ["18f26k22", 0x5440] )
-
+# XXX add more
 
 def getOut():
     print "For help use --help"
@@ -90,6 +91,7 @@ def main():
     arduino.flushInput()
     arduino.write('HX')
     if arduino.read() == 'H':
+        deviceID = ''
         # If Arduino responds, check for the mcu
         print("\tSuccess")
         print("Connecting to the mcu..."),
@@ -112,7 +114,10 @@ def main():
                     print("\tYour MCU: " + mcu)
                     mcu_found = True
 
-        if mcu_found:
+        if not mcu_found:
+            print "MCU not recognized. Check the list of compatible MCU'S and/or check your wire conections. (devId = {})".format(deviceID)
+            sys.exit(1)
+        else:
             # Perform Bulk Erase
             print "Erasing chip............",
             arduino.flushInput()
@@ -362,9 +367,6 @@ def main():
             else:
                 print "Couldn't erase the chip."
                 sys.exit(1)
-        else:
-            print "MCU not recognized. Check the list of compatible MCU'S and/or check your wire conections."
-            sys.exit(1)
     else:
         print "Couldn't connect to the Arduino."
         sys.exit(2)
