@@ -2,7 +2,7 @@
 
 Version 0.4
 
-* 2019 - Added support for PIC18F2xK22/PIC18F4xK22, Python 3 and more by Maxime Vincent - https://github.com/maximevince/arduino-as-pic18f-programmer
+* 2019 - Added support for PIC18F2xK22/PIC18F4xK22, cleaned up and more by Maxime Vincent - https://github.com/maximevince/arduino-as-pic18f-programmer
 * 2017 - Improved by Xerxes Rånby - https://bitbucket.org/xranby/arduino-as-pic18f-programmer-for-linux
 * 2017 - Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/arduino-as-pic18f-programmer-for-linux
 * Copyright (C) 2012  kirill Kulakov - https://sites.google.com/site/thehighspark/home
@@ -66,7 +66,6 @@ Thats it!
 
 version 0.4
  - Support for PIC18F2xK22/PIC18F4xK22 series (Only PIC18F26K22 was tested)
- - Python 3 support
  - Code clean-up
 
 version 0.3
