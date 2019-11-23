@@ -18,6 +18,7 @@ Copyright (C) 2012-2017  Kirill Kulakov, Jose Carlos Granja & Xerxes Ranby
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from __future__ import print_function
 from serial import *
 import getopt
 import sys
@@ -37,15 +38,15 @@ mcus = (["18f2455", 0x1260], ["18f2550", 0x1240],
         ["18f46k22", 0x5400], ["18lf46k22", 0x5420])
 
 def getOut():
-    print "For help use --help"
+    print("For help use --help")
     sys.exit(2)
 
 
 def main():
     try:
         options, arguments = getopt.getopt(sys.argv[1:], 'hp:aP:i:levV', ['help', 'port=', 'list', 'erase'])
-    except getopt.error, msg:
-        print msg
+    except getopt.error as msg:
+        print(msg)
         getOut()
 
     MCU = ""
@@ -58,12 +59,12 @@ def main():
     for opt, arg in options:
         if opt in ('-h', '--help'):
             helpFile = open("help", "r")
-            print helpFile.read() + "\n"
+            print(helpFile.read() + "\n")
             sys.exit(0)
         elif opt in ('-l', '--list'):
-            print "Supported MCUs:"
+            print("Supported MCUs:")
             for mcu, i in mcus:
-                print "pic" + mcu
+                print("pic" + mcu)
             sys.exit(0)
         elif opt in ('-e', '--erase'):
             ERASE_MODE = True
@@ -82,28 +83,32 @@ def main():
     if PORT == "":
         PORT = '/dev/ttyACM0'
     if FILENAME == "" and not ERASE_MODE:
-        print "You need to select an hex file with -i option"
+        print("You need to select an hex file with -i option")
         getOut()
 
-    print("Connecting to arduino..."),
+    print("Connecting to arduino...", end='')
 
     # Open Serial port
     try:
         arduino = Serial(PORT, 2000000)
-    except SerialException, msg:
-        print msg
+    except SerialException as msg:
+        print(msg)
         sys.exit(2)
 
     time.sleep(2)
 
     # Say hello to Arduino
     arduino.flushInput()
-    arduino.write('HX')
-    if arduino.read() == 'H':
+    arduino.write('HX'.encode('utf-8'))
+
+    if not arduino.read().decode() == 'H':
+        print("Couldn't connect to the Arduino.")
+        sys.exit(2)
+    else:
         deviceID = ''
         # If Arduino responds, check for the mcu
         print("\tSuccess")
-        print("Connecting to the mcu..."),
+        print("Connecting to the mcu...", end='')
 
         # checking the MCU
         mcu_found = False
@@ -114,7 +119,7 @@ def main():
 
         if not mcu_found:
             arduino.flushInput()
-            arduino.write('DX')  # asking Arduino for the DeviceID
+            arduino.write('DX'.encode('utf-8'))  # asking Arduino for the DeviceID
             deviceID = ord(arduino.read()) + ord(arduino.read()) * 256
             #print("\tFound MCU id: {:X}".format(deviceID))
 
@@ -124,14 +129,14 @@ def main():
                     mcu_found = True
 
         if not mcu_found:
-            print "MCU not recognized. Check the list of compatible MCU'S and/or check your wire conections. (devId = {})".format(deviceID)
+            print("MCU not recognized. Check the list of compatible MCU'S and/or check your wire conections. (devId = {})".format(deviceID))
             sys.exit(1)
         else:
             # Perform Bulk Erase
-            print "Erasing chip............",
+            print("Erasing chip............", end='')
             arduino.flushInput()
-            arduino.write('EX')
-            if arduino.read() == "K":
+            arduino.write('EX'.encode('utf-8'))
+            if arduino.read().decode() == "K":
                 print("\tSuccess")
 
                 if not ERASE_MODE:
@@ -139,9 +144,9 @@ def main():
                     hexFile = Hex(FILENAME)
 
                     # Program Memory
-                    print "Programming flash memory...",
+                    print("Programming flash memory...", end='')
                     if verbose:
-                        print "\n",
+                        print("\n",)
                     address = 0
                     while address < 0x10000:
                         if hexFile.haveData(address):
@@ -151,20 +156,20 @@ def main():
                                 buf += str(hex(hexFile.getData(address + j))[2:].zfill(2))
                             buf += "X"
                             if verbose:
-                                print buf
+                                print(buf)
                             arduino.flushInput()
-                            arduino.write(buf.upper())
+                            arduino.write(buf.upper().encode('utf-8'))
                             arduino.read()
                         address += 0x20
                         print("\rFlash write @ 0x{:x}".format(address))
-                        #print "."
-                    print "\tSuccess"
+                        #print(".")
+                    print("\tSuccess")
 
                     # Program IDs
                     if hexFile.haveID():
-                        print "Programming ID memory...",
+                        print("Programming ID memory...", end='')
                         if verbose:
-                            print "\n",
+                            print("\n",)
                         # ID 0x200000 - 0x200007
                         address = 0
 
@@ -174,17 +179,17 @@ def main():
                             buf += str(hex(hexFile.getID(address + j))[2:].zfill(2))
                         buf += "X"
                         if verbose:
-                            print buf
+                            print(buf)
                         arduino.flushInput()
-                        arduino.write(buf.upper())
+                        arduino.write(buf.upper().encode('utf-8'))
                         arduino.read()
-                        print "\tSuccess"
+                        print("\tSuccess")
 
                     # Program Data EE
                     # TODO only some parts have EEPROM
-                    print "Programming EEPROM......",
+                    print("Programming EEPROM......", end='')
                     if verbose:
-                        print "\n",
+                        print("\n",)
                     # EEPROM 0xF00000 - 0xF00100
                     address = 0
                     while address < 0x100:
@@ -195,86 +200,86 @@ def main():
                                 buf += str(hex(hexFile.getEEPROM(address + j))[2:].zfill(2))
                             buf += "X"
                             if verbose:
-                                print buf
+                                print(buf)
                             arduino.flushInput()
-                            arduino.write(buf.upper())
+                            arduino.write(buf.upper().encode('utf-8'))
                             arduino.read()
                             print("\rEEPROM write @ 0x{:x}".format(address))
                         address += 0x20
 
-                    print "\tSuccess"
+                    print("\tSuccess")
 
                     # verify Program
-                    print "Verify flash memory...",
+                    print("Verify flash memory...")
                     verification = 1
                     if verbose:
-                        print "\n",
+                        print("\n",)
                     address = 0
                     while address < 0x10000:
                         if hexFile.haveData(address):
-                            print("Verifying addr 0x{:x}".format(address))
+                            print("\rVerifying addr 0x{:x}...".format(address))
                             # Send read command
                             buf = "R"
                             buf += str(hex(address)[2:].zfill(6))
                             buf += "X"
                             arduino.flushInput()
-                            arduino.write((buf).upper())
+                            arduino.write((buf).upper().encode('utf-8'))
                             arduino.read()
 
                             # Receive data
-                            buf = ""
+                            buf = "".encode()
                             r = arduino.read()
-                            while r != "X":
+                            while r.decode() != "X":
                                 buf += r
                                 r = arduino.read()
                             buf += r
 
                             if verbose:
-                                print buf
+                                print(buf)
 
                             # Compare
                             c, buf = buf[:1], buf[1:]
-                            if c != "R":
-                                print "abort; wrong command received from arduino"
+                            if c.decode() != "R":
+                                print("abort; wrong command received from arduino")
                                 return 1
 
                             iAddress, buf = int(buf[:6], 16), buf[6:]
                             for j in range(0x20):
                                 data, buf = int(buf[:2], 16), buf[2:]
                                 if hexFile.getData(iAddress + j) != data:
-                                    print "verification @ 0x{:x} failed: ".format(iAddress + j) + str(hex(hexFile.getData(iAddress + j)))[2:].zfill(2)+" != readback: "+str(hex(data))[2:].zfill(2)
+                                    print("\n\tVerification @ 0x{:x} failed: ".format(iAddress + j) + str(hex(hexFile.getData(iAddress + j)))[2:].zfill(2)+" != readback: "+str(hex(data))[2:].zfill(2))
                                     verification = 0
 
                         address += 0x20
                     if verification == 0:
-                        print "\tFailed"
+                        print("\nFailed")
                     else:
-                        print "\tSuccess"
+                        print("\nSuccess")
 
                     # verify IDs
-                    print "Verify ID memory...",
+                    print("Verify ID memory...", end='')
                     verification = 1
                     if verbose:
-                        print "\n",
+                        print("\n",)
                     if hexFile.haveID():
                         # Send read command
                         buf = "R"
                         buf += str(hex(0x200000)[2:].zfill(6))
                         buf += "X"
                         arduino.flushInput()
-                        arduino.write((buf).upper())
+                        arduino.write((buf).upper().encode('utf-8'))
                         arduino.read()
 
                         # Receive data
                         buf = ""
                         r = arduino.read()
-                        while r != "X":
+                        while r.decode() != "X":
                             buf += r
                             r = arduino.read()
                         buf += r
 
                         if verbose:
-                            print buf
+                            print(buf)
 
                         # Compare
                         c = buf[:1]
@@ -284,7 +289,7 @@ def main():
                             buf = buf[1:]
                             c = buf[:1]
                         if c != "R":
-                            print "abort; wrong command received from arduino"
+                            print("abort; wrong command received from arduino")
                             return 1
                         # remove R
                         buf = buf[1:]
@@ -293,18 +298,18 @@ def main():
                         for j in range(0x8):
                             data, buf = int(buf[:2], 16), buf[2:]
                             if hexFile.getID(iAddress - 0x200000 + j) != data:
-                                print "verification failed "+str(hex(hexFile.getID(iAddress - 0x200000 + j)))[2:].zfill(2)+" do not match "+str(hex(data))[2:].zfill(2)
+                                print("verification failed "+str(hex(hexFile.getID(iAddress - 0x200000 + j)))[2:].zfill(2)+" do not match "+str(hex(data))[2:].zfill(2))
                                 verification = 0
                     if verification == 0:
-                        print "\tFailed"
+                        print("\tFailed")
                     else:
-                        print "\tSuccess"
+                        print("\tSuccess")
 
                     # verify EEPROM Data
-                    print "Verify EEPROM memory...",
+                    print("Verify EEPROM memory...", end='')
                     verification = 1
                     if verbose:
-                        print "\n",
+                        print("\n",)
                     address = 0
                     while address < 0x100:
                         if hexFile.haveEEPROM(address):
@@ -314,19 +319,19 @@ def main():
                             buf += str(hex(address + 0xF00000)[2:].zfill(6))
                             buf += "X"
                             arduino.flushInput()
-                            arduino.write((buf).upper())
+                            arduino.write((buf).upper().encode('utf-8'))
                             arduino.read()
 
                             # Receive data
                             buf = ""
                             r = arduino.read()
-                            while r != "X":
+                            while r.decode() != "X":
                                 buf += r
                                 r = arduino.read()
                             buf += r
 
                             if verbose:
-                                print buf
+                                print(buf)
 
                             # Compare
                             c = buf[:1]
@@ -336,7 +341,7 @@ def main():
                                 buf = buf[1:]
                                 c = buf[:1]
                             if c != "R":
-                                print "abort; wrong command received from arduino"
+                                print("abort; wrong command received from arduino")
                                 return 1
                             # remove R
                             buf = buf[1:]
@@ -345,40 +350,37 @@ def main():
                             for j in range(0x20):
                                 data, buf = int(buf[:2], 16), buf[2:]
                                 if hexFile.getEEPROM(iAddress - 0xF00000 + j) != data:
-                                    print "verification failed "+str(hex(hexFile.getEEPROM(iAddress - 0xF00000 + j)))[2:].zfill(2)+" do not match "+str(hex(data))[2:].zfill(2)
+                                    print("verification failed "+str(hex(hexFile.getEEPROM(iAddress - 0xF00000 + j)))[2:].zfill(2)+" do not match "+str(hex(data))[2:].zfill(2))
                                     verification = 0
 
                         address += 0x20
                     if verification == 0:
-                        print "\tFailed"
+                        print("\tFailed")
                     else:
-                        print "\tSuccess"
+                        print("\tSuccess")
 
                     # program configuration bits
-                    print "Programming the fuse bits...",
+                    print("Programming the fuse bits...", end='')
                     if verbose:
-                        print "\n",
+                        print("\n",)
                     for i in range(0x0F):
                         if hexFile.fuseChanged(i):
                             buf = "C" + hex(i)[2:] + hex(hexFile.getFuse(i))[2:].zfill(2) + "X"
                             if verbose:
                                 if extraVerbose:
-                                    print "fuse "+str(hex(i))+" changed to "+str(hex(hexFile.getFuse(i)))
-                                print buf
+                                    print("fuse "+str(hex(i))+" changed to "+str(hex(hexFile.getFuse(i))))
+                                print(buf)
                             arduino.flushInput()
-                            arduino.write(buf.upper())
+                            arduino.write(buf.upper().encode('utf-8'))
                             arduino.read()
 
-                    print "\tSuccess"
+                    print("\tSuccess")
 
                     # verify configuration bits
                     # TODO
             else:
-                print "Couldn't erase the chip."
+                print("Couldn't erase the chip.")
                 sys.exit(1)
-    else:
-        print "Couldn't connect to the Arduino."
-        sys.exit(2)
     arduino.close()
 
 

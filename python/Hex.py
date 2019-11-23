@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-Copyright (C) 2012-2017 Kirill Kulakov, Jose Carlos Granja & Xerxes Ranby
+Copyright (C) 2012-2019 Kirill Kulakov, Jose Carlos Granja, Xerxes Ranby, Maxime Vincent
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,16 +17,17 @@ Copyright (C) 2012-2017 Kirill Kulakov, Jose Carlos Granja & Xerxes Ranby
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from __future__ import print_function
+from __future__ import division
 import os
 import sys
-
 
 class Hex:
     def __init__(self, fileName):
         self.memory = [0] * 0x10000
-        self.havememory = [0] * (0x10000/0x20)
+        self.havememory = [0] * (0x10000//0x20)
         self.eeprom = [0] * 0x100
-        self.haveeeprom = [0] * (0x100/0x20)
+        self.haveeeprom = [0] * (0x100//0x20)
 
         self.id = [0] * 0x8
 
@@ -40,10 +41,10 @@ class Hex:
 
         for i in range(0x10000):
             self.memory[i] = 0xFF
-            self.havememory[i/0x20] = 0
+            self.havememory[i//0x20] = 0
         for i in range(0x100):
             self.eeprom[i] = 0
-            self.haveeeprom[i/0x20] = 0
+            self.haveeeprom[i//0x20] = 0
         for i in range(0x8):
             self.id[i] = 0
             self.haveid = 0
@@ -51,11 +52,12 @@ class Hex:
             self.fuseStatus[i] = 0
 
         while True:
-            buf = hexFile.readline(128).translate(None, ':\n')
+            buf = hexFile.readline(128).replace(':','').replace('\n','')
+            print("buf became:\n{}".format(buf))
             if buf == "":
                 break
             if self.reformat(buf) == 1:
-                print "Hex file not valid."
+                print("Hex file not valid.")
                 print("Buf: {}".format(buf))
                 sys.exit(2)
         hexFile.close()
@@ -64,13 +66,13 @@ class Hex:
         return self.memory[address]
 
     def haveData(self, address):
-            return self.havememory[address/0x20]
+            return self.havememory[address//0x20]
 
     def getEEPROM(self, address):
         return self.eeprom[address]
 
     def haveEEPROM(self, address):
-        return self.haveeeprom[address/0x20]
+        return self.haveeeprom[address//0x20]
 
     def getID(self, address):
         return self.id[address]
@@ -136,21 +138,21 @@ class Hex:
 
             # Memory
             if (iAddress + self.offset) < 0x10000:
-                for i in range(iSize / 2):
+                for i in range(iSize // 2):
                     buf = buf[2:]
 
                     self.memory[iAddress + i * 2 + self.offset] = int(buf[:2], 16)
                     if self.memory[iAddress + i * 2 + self.offset] == -1:
                         return 1
 
-                    self.havememory[(iAddress + i * 2 + self.offset)/0x20] = 1
+                    self.havememory[(iAddress + i * 2 + self.offset)//0x20] = 1
 
                     buf = buf[2:]
                     self.memory[iAddress + i * 2 + self.offset + 1] = int(buf[:2], 16)
                     if self.memory[iAddress + i * 2 + self.offset + 1] == -1:
                         return 1
 
-                    self.havememory[(iAddress + i * 2 + self.offset + 1)/0x20] = 1
+                    self.havememory[(iAddress + i * 2 + self.offset + 1)//0x20] = 1
 
             # Id
             elif iAddress + self.offset >= 0x200000 and iAddress + self.offset <= 0x200007:
@@ -180,14 +182,14 @@ class Hex:
                     if self.eeprom[iAddress + i * 2 + self.offset - 0xF00000] == -1:
                         return 1
 
-                    self.haveeeprom[(iAddress + i * 2 + self.offset - 0xF00000)/0x20] = 1
+                    self.haveeeprom[(iAddress + i * 2 + self.offset - 0xF00000)//0x20] = 1
 
                     buf = buf[2:]
                     self.eeprom[iAddress + i * 2 + self.offset - 0xF00000 + 1] = int(buf[:2], 16)
                     if self.eeprom[iAddress + i * 2 + self.offset - 0xF00000 + 1] == -1:
                         return 1
 
-                    self.haveeeprom[(iAddress + i * 2 + self.offset - 0xF00000 + 1)/0x20] = 1
+                    self.haveeeprom[(iAddress + i * 2 + self.offset - 0xF00000 + 1)//0x20] = 1
 
             # Unknown data
             else:
