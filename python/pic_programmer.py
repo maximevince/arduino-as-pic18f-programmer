@@ -326,9 +326,9 @@ def main():
                             buf = ""
                             r = arduino.read()
                             while r.decode() != "X":
-                                buf += r
+                                buf += r.decode("utf-8")
                                 r = arduino.read()
-                            buf += r
+                            buf += r.decode("utf-8")
 
                             if verbose:
                                 print(buf)
