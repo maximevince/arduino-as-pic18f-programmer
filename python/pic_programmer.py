@@ -227,7 +227,7 @@ def main():
                             arduino.read()
 
                             # Receive data
-                            buf = "".encode()
+                            buf = []
                             r = arduino.read()
                             while r.decode() != "X":
                                 buf += r
@@ -271,7 +271,7 @@ def main():
                         arduino.read()
 
                         # Receive data
-                        buf = ""
+                        buf = []
                         r = arduino.read()
                         while r.decode() != "X":
                             buf += r
@@ -323,12 +323,12 @@ def main():
                             arduino.read()
 
                             # Receive data
-                            buf = ""
+                            buf = []
                             r = arduino.read()
                             while r.decode() != "X":
-                                buf += r.decode("utf-8")
+                                buf += r
                                 r = arduino.read()
-                            buf += r.decode("utf-8")
+                            buf += r
 
                             if verbose:
                                 print(buf)
