@@ -1,7 +1,8 @@
 ﻿# Arduino as PIC18F programmer
 
-Version 0.4
+Version 0.5
 
+* 2021 - More Python 3 fixes by Maxime Vincent - https://github.com/maximevince/arduino-as-pic18f-programmer
 * 2019 - Added support for PIC18F2xK22/PIC18F4xK22, Python 3 and more by Maxime Vincent - https://github.com/maximevince/arduino-as-pic18f-programmer
 * 2017 - Improved by Xerxes Rånby - https://bitbucket.org/xranby/arduino-as-pic18f-programmer-for-linux
 * 2017 - Adapted for Linux by Jose Carlos Granja - https://bitbucket.org/JoseFuzzNo/arduino-as-pic18f-programmer-for-linux
